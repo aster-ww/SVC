@@ -6,3 +6,6 @@ checkpoints/
 *.pth
 *.npy
 *.npz
+
+# Sphinx build output
+docs/_build/
