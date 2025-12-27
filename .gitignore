@@ -1,0 +1,8 @@
+# training outputs
+output/
+checkpoints/
+
+# large binary artifacts
+*.pth
+*.npy
+*.npz
