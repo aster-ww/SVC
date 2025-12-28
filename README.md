@@ -8,6 +8,7 @@
 ```bash
 git clone https://github.com/aster-ww/SVC.git
 cd SVC
+```
 
 ---
 ## Documentation
@@ -22,7 +23,6 @@ The documentation includes:
 - API reference
 
 ---
-
 ## Data availability
 
 Example datasets used in this project are publicly available:
