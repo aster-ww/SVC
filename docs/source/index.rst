@@ -1,5 +1,7 @@
-**Welcome to SVC’s page!**
+SVC Documentation
 =================
+
+Welcome to the documentation site.
 
 .. toctree::
    :maxdepth: 2
@@ -14,4 +16,3 @@
 
    tutorials/preprocess
    tutorials/train_seqfish_plus
-
