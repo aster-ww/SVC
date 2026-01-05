@@ -8,9 +8,12 @@ SVC introduces unique features in realizing AI-powered virtual cells (AIVC) in t
 
 - ***In silico* prediction at subcellular resolution**: SVC predicts subcellular spatial localization patterns for unmeasured genes in new datasets, and can be extended to predict perturbation-induced spatial redistribution, moving beyond conventional gene imputation and spatial reconstruction to unprecedented subcellular resolution.
 
+
 - **Multi-scale and multi-modality modeling**: SVC jointly models subcellular spatial gene expression with tissue microenvironment context and paired cell morphology images, integrating multi-modal information across subcellular, cellular and tissue scales.
 
+
 - **A unified, scalable ViT-based framework**: SVC adapts the powerful ViT architecture with self-attention mechanisms to capture complex multi-gene spatial dependencies within cells, producing a unified virtual representation shared across genes and cells. The framework scales to tissue-level datasets and supports scalable processing of hundreds to thousands of genes simultaneously.
+
 
 - **Subcellularly informed cell and tissue-level analysis**: Leveraging subcellularly informed representations, SVC distinguishes cellular states and reveals tissue-level organization, offering a new perspective on tasks such as cell clustering and spatial domain detection.
 
@@ -22,3 +25,6 @@ SVC introduces unique features in realizing AI-powered virtual cells (AIVC) in t
 git clone https://github.com/aster-ww/SVC.git
 cd SVC
 
+---
+
+Visit our [group website](https://xiangzhou.github.io/) for more statistical tools on analyzing genetics, genomics and transcriptomics data.
