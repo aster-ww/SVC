@@ -5,9 +5,10 @@ author = "Hui Wan"
 release = "0.1.0"
 
 extensions = [
-    "myst_parser",
+    "myst_nb", "myst_parser",
 ]
 
+nb_execution_mode = "off"
 templates_path = ["../_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 

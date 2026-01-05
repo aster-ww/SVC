@@ -1,7 +1,7 @@
-SVC Documentation
+**Welcome to SVC’s page!**
 =================
 
-Welcome to the documentation site.
+
 
 .. toctree::
    :maxdepth: 2
@@ -9,3 +9,9 @@ Welcome to the documentation site.
 
    getting_started
    api
+
+.. toctree::    
+   :maxdepth: 1    
+   :caption: Tutorials     
+
+   tutorials/index
