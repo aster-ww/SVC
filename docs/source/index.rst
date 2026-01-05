@@ -2,16 +2,10 @@
 =================
 
 
-
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents
+   :maxdepth: 1
+   :caption: Tutorials
 
-   getting_started
-   api
+   tutorials/preprocess
+   tutorials/train_seqfish_plus
 
-.. toctree::    
-   :maxdepth: 1    
-   :caption: Tutorials     
-
-   tutorials/index

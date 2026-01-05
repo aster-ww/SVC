@@ -8,3 +8,4 @@ covering data preparation, model training, and downstream applications.
    :maxdepth: 1
 
    preprocess
+   train_seqfish_plus

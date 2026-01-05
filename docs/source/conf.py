@@ -5,20 +5,16 @@ author = "Hui Wan"
 release = "0.1.0"
 
 extensions = [
-    "myst_nb", "myst_parser",
+    "myst_nb",
 ]
 
 nb_execution_mode = "off"
+
 templates_path = ["../_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
 html_theme = "sphinx_rtd_theme"
 html_static_path = ["_static"]
 html_logo = "_static/SVC_logo.png"
-
-source_suffix = {
-    ".rst": "restructuredtext",
-    ".md": "markdown",
-}
 
 root_doc = "index"
