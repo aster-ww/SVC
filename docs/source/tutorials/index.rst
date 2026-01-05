@@ -9,3 +9,4 @@ covering data preparation, model training, and downstream applications.
 
    preprocess
    train_seqfish_plus
+   gene_colocalization

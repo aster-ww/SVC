@@ -16,6 +16,7 @@ Welcome to the documentation site.
 
    tutorials/preprocess
    tutorials/train_seqfish_plus
+   tutorials/gene_colocalization
 
 .. toctree::    
    :maxdepth: 1    
