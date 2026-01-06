@@ -4,5 +4,7 @@ Applications
 .. toctree::
    :maxdepth: 1
 
-   gene_colocalization
    predictions
+   gene_colocalization
+   evaluate_cell_state
+   
