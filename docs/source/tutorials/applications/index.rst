@@ -5,3 +5,4 @@ Applications
    :maxdepth: 1
 
    gene_colocalization
+   predictions
