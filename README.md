@@ -1,6 +1,6 @@
 # SVC
 
-**SVC (Spatially embedded Virtual Cell)** is a ViT-based Spatial Virtual Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity.
+**SVC (Spatially embedded Virtual Cell)** is a Vision Transformer-based Spatial Virtual Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity.
 
 ---
 ## Installation
@@ -18,9 +18,9 @@ cd SVC
 The documentation includes:
 - Project overview
 - Installation instructions
+- API reference
 - Data preprocessing
 - Model usage examples
-- API reference
 
 ---
 ## Data availability
