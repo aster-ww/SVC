@@ -1,8 +1,6 @@
-import numpy as np
-import torch
+from model.utils import *
 from torch import nn
 from functools import reduce
-import math
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 from model.performer_pytorch import Performer
@@ -10,11 +8,8 @@ import os
 from typing import Optional, Dict, List
 from torch.utils.data import DataLoader
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
-from tqdm.auto import tqdm
-from model.utils import *
 
-# helpers
+
 def pair(t):
     return t if isinstance(t, tuple) else (t, t)
 
@@ -73,7 +68,7 @@ class SVC(nn.Module):
                  use_rezero = False,
                  cross_attend = False,
                  no_projection = False,
-                 tie_embed = False,                
+                 tie_embed = False,                  # False: output is num of tokens, True: output is dim of tokens  //multiply final embeddings with token weights for logits, like gpt decoder//
                  auto_check_redraw = True,
                  g2v_position_emb=True,
                  qkv_bias = False
@@ -199,21 +194,6 @@ class SVC(nn.Module):
             return encoding[:,1+self.add_dim:,:], mu[:,1+self.add_dim:,:,:], r[:,1+self.add_dim:,:,:]#, morphology[:,1,:]
 
 
-def save_ckpt(model_name, ckpt_folder, model):
-    """
-    save checkpoint
-    """
-    if not os.path.exists(ckpt_folder):
-        os.makedirs(ckpt_folder)
-    # torch.save(model, f'{ckpt_folder}{model_name}epochs_{epoch}.pth')
-    print(f'Saving model checkpoint to {ckpt_folder}{model_name}.pth')
-    torch.save(
-        {
-            'model_state_dict': model.state_dict(),#.module.
-        },
-        f'{ckpt_folder}{model_name}.pth'
-    )
-
 
 def train_SVC(
     model: torch.nn.Module,
@@ -225,12 +205,12 @@ def train_SVC(
     mask_prob: float = 0.1,
     foreground_expanded: torch.Tensor = None,
     weight_decay: float = 1e-2,
-    accum_iter: int = 1,
+    accum_iter: int = 1,#4
     ckpt_dir: Optional[str] = None,
     ckpt_name: str = "SVC_pretrain",
     use_cell_identity: bool = True,
     use_epoch_bar: bool = True,
-    early_stop_patience: int = 0,     
+    early_stop_patience: int = 0,      
     early_stop_min_delta: float = 0.0  
 ) -> List[float]:
     """
@@ -244,7 +224,7 @@ def train_SVC(
         device: torch.device, e.g. torch.device("cuda").
         num_epochs: Number of training epochs.
         learning_rate: Initial learning rate.
-        mask_prob: Fraction of genes to mask per sample (0 to 1).
+        mask_prob: Fraction of genes to mask per cell (0 to 1).
         foreground_expanded: Foreground mask broadcastable to loss_pixel0.
         weight_decay: Weight decay for AdamW.
         accum_iter: Gradient accumulation steps.
@@ -266,10 +246,9 @@ def train_SVC(
         first_cycle_steps = 60, 
         cycle_mult=2.0,      
         max_lr = learning_rate,  
-        min_lr = learning_rate/1000       #1e-5     
+        min_lr = learning_rate/100, 
     )
 
-    
     epoch_losses: List[float] = []
 
     if foreground_expanded is None:
@@ -293,6 +272,8 @@ def train_SVC(
     best_loss = float("inf")
     best_state_dict = None
     no_improve_epochs = 0
+    best_epoch = None
+
 
     for epoch in epoch_bar:
         model.train()
@@ -380,46 +361,185 @@ def train_SVC(
         epoch_losses.append(avg_loss)
 
         improved = (avg_loss + early_stop_min_delta) < best_loss
+
         if improved:
             best_loss = avg_loss
             best_state_dict = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+            best_epoch = epoch + 1
             no_improve_epochs = 0
         else:
             if early_stop_patience > 0:
                 no_improve_epochs += 1
 
+        # ---- logging ----
         if early_stop_patience > 0:
-            if use_epoch_bar:
-                epoch_bar.set_postfix({
-                    "loss": f"{avg_loss:.4f}",
-                    "no_improve": no_improve_epochs,
-                    "best": f"{best_loss:.4f}",
-                })
+            if use_epoch_bar and epoch_bar is not None:
+                epoch_bar.set_postfix(
+                    {
+                        "loss": f"{avg_loss:.4f}",
+                        "no_improve": no_improve_epochs,
+                        "best": f"{best_loss:.4f}",
+                    }
+                )
             else:
-                print(f"Epoch {epoch + 1}/ {num_epochs}: loss={avg_loss:.4f}, no_improve={no_improve_epochs}, best={best_loss:.4f}")
+                print(
+                    f"Epoch {epoch + 1}/ {num_epochs}: "
+                    f"loss={avg_loss:.4f}, no_improve={no_improve_epochs}, best={best_loss:.4f}"
+                )
         else:
-            if use_epoch_bar:
-                epoch_bar.set_postfix({
-                    "loss": f"{avg_loss:.4f}",
-                })
+            if use_epoch_bar and epoch_bar is not None:
+                epoch_bar.set_postfix({"loss": f"{avg_loss:.4f}"})
             else:
                 print(f"Epoch {epoch + 1}/ {num_epochs}: loss={avg_loss:.4f}")
 
         scheduler.step()
 
-        if early_stop_patience > 0 and no_improve_epochs >= early_stop_patience:
-            print(
-                f"Early stopping at epoch {epoch + 1} "
-                f"with best loss {best_loss:.4f}"
-            )
-            break
+        # # ---- save rolling best every 100 epochs ----
+        # if ckpt_dir is not None and ((epoch + 1) % 100 == 0):
+        #     os.makedirs(ckpt_dir, exist_ok=True)
+        #     if best_state_dict is not None:
+        #         save_path = os.path.join(ckpt_dir, f"{ckpt_name}_best_ep{epoch+1:04d}.pth")
+        #         torch.save(
+        #             {
+        #                 "model_state_dict": best_state_dict,
+        #                 "best_loss": float(best_loss),
+        #                 "best_epoch": int(best_epoch) if best_epoch is not None else None,
+        #                 "saved_at_epoch": int(epoch + 1),
+        #             },
+        #             save_path,
+        #         )
 
-    if best_state_dict is not None:
-        model.load_state_dict(best_state_dict)
+        # ---- early stopping ----
+        if early_stop_patience > 0 and no_improve_epochs >= early_stop_patience:
+            msg = f"Early stopping at epoch {epoch + 1} with best loss {best_loss:.4f}"
+            if best_epoch is not None:
+                msg += f" at epoch {best_epoch}"
+            print(msg)
+            break
 
     if ckpt_dir is not None:
         os.makedirs(ckpt_dir, exist_ok=True)
-        save_ckpt(ckpt_name, ckpt_dir, model)
 
-    print("Finished training")
-    return epoch_losses
+        if best_state_dict is None:
+            best_state_dict = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+            best_epoch = len(epoch_losses)
+            best_loss = epoch_losses[-1] if epoch_losses else float("inf")
+
+        best_path = os.path.join(ckpt_dir, f"{ckpt_name}.pth")
+        torch.save(
+            {
+                "model_state_dict": best_state_dict,
+            },
+            best_path,
+        )
+
+    final_msg = f"Finished training at epoch {len(epoch_losses)}"
+    if best_epoch is not None:
+        final_msg += f" | best loss {best_loss:.4f} at epoch {best_epoch}"
+    print(final_msg)
+
+    return epoch_losses, best_epoch, best_loss
+        
+
+
+
+def extract_latent_embeddings(
+    model,
+    loader,
+    device,
+    use_cell_identity: bool = True,
+    cell_median: float | None = None,
+    return_tensor: bool = False,
+):
+    """
+    Extract per-cell latent embeddings from a trained SVC model.
+
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Trained SVC model.
+    loader : torch.utils.data.DataLoader
+        Dataloader yielding (inputs_ori, cell_morphology, nuclear_morphology, location, cell_cycle).
+    device : torch.device or str
+        CUDA / CPU device.
+    cell_median : float or None
+        Median library size used for size-factor normalization. If None and normalization is on,
+        it will be estimated from the first pass over the loader.
+    normalize_by_size_factor : bool
+        Whether to normalize inputs_ori by per-cell size factor.
+    return_tensor : bool
+        If True, return a torch.Tensor on CPU. Otherwise return a NumPy array.
+
+    Returns
+    -------
+    embedding : np.ndarray or torch.Tensor
+        Shape: (n_cell, n_gene, H, W) depending on your model output.
+    """
+
+    model.eval()
+
+    # Estimate cell_median if needed
+    if cell_median is None:
+        sums = []
+        with torch.no_grad():
+            for batch in loader:
+                inputs_ori = batch[0]
+                sums.append(inputs_ori.sum(dim=(1, 2, 3)).cpu())
+        cell_median = np.median(torch.cat(sums).numpy())
+
+    all_latent = []
+    
+    if use_cell_identity:
+        with torch.no_grad():
+            for (inputs_ori, cell_morphology, nuclear_morphology, location, cell_identity) in loader:
+                inputs_ori = inputs_ori.to(device)
+                location = location.to(device).float()
+                cell_identity = cell_identity.to(device).float()
+                cell_morphology = cell_morphology.to(device).float()
+                nuclear_morphology = nuclear_morphology.to(device).float()
+
+                
+                size_factor = inputs_ori.sum(dim=(1, 2, 3)) / cell_median
+                size_factor = size_factor[:, None, None, None]
+                inputs = inputs_ori / size_factor
+                
+
+                mask = torch.zeros(
+                    (inputs.shape[0], inputs.shape[1]),
+                    dtype=torch.bool,
+                    device=device,
+                )
+
+                embedding, _, _ = model(
+                    inputs, mask, location, cell_morphology, nuclear_morphology, cell_identity
+                )
+                all_latent.append(embedding)
+    else:
+        with torch.no_grad():
+            for (inputs_ori, cell_morphology, nuclear_morphology, location) in loader:
+                inputs_ori = inputs_ori.to(device)
+                location = location.to(device).float()
+                cell_morphology = cell_morphology.to(device).float()
+                nuclear_morphology = nuclear_morphology.to(device).float()
+
+                
+                size_factor = inputs_ori.sum(dim=(1, 2, 3)) / cell_median
+                size_factor = size_factor[:, None, None, None]
+                inputs = inputs_ori / size_factor
+                
+
+                mask = torch.zeros(
+                    (inputs.shape[0], inputs.shape[1]),
+                    dtype=torch.bool,
+                    device=device,
+                )
+
+                embedding, _, _ = model(
+                    inputs, mask, location, cell_morphology, nuclear_morphology
+                )
+                all_latent.append(embedding)
+
+
+    all_latent = torch.cat(all_latent, dim=0)  # (n_cell, n_gene, H, W)
+
+    return all_latent if return_tensor else all_latent.detach().cpu().numpy()
