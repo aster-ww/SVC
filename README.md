@@ -1,5 +1,5 @@
 # SVC
-<img src="docs/source/_static/web_logo.png" width="30%">
+<img src="docs/source/_static/web_logo.png" width="50%">
 
 **SVC** is a Vision Transformer-based Spatial Virtual Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity.
 
