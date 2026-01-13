@@ -2,6 +2,8 @@
 
 **SVC (Spatially embedded Virtual Cell)** is a Vision Transformer-based Spatial Virtual Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity.
 
+
+![](docs/source/_static/web_logo.png)
 ---
 
 ## Installation

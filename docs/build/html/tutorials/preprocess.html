@@ -1,0 +1,399 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data preprocessing &mdash; SVC 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Model training" href="train_seqfish_plus.html" />
+    <link rel="prev" title="API reference" href="../api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SVC
+              <img src="../_static/SVC_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Data preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="train_seqfish_plus.html">Model training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications/index.html">Applications</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reproducibility</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../reproducibility.html">Reproducibility</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SVC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Data preprocessing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/preprocess.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="data-preprocessing">
+<h1>Data preprocessing<a class="headerlink" href="#data-preprocessing" title="Link to this heading"></a></h1>
+<p>In this tutorial, we demonstrate how to prepare the required inputs for training the SVC model, using seqFISH+ data from Eng et al. (2019) as an example.</p>
+<p>Preprocessed datasets used in our project that are ready to use can be downloaded from: <a class="reference external" href="https://drive.google.com/drive/folders/1G4Nl-As6hXsAh7vHaRJ3vkYv44A-mU5f">https://drive.google.com/drive/folders/1G4Nl-As6hXsAh7vHaRJ3vkYv44A-mU5f</a></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scanpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model.utils</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">natsort</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>load subcellular ST data</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">y</span></code>: Cartesian coordinates of a measured transcript within the cell</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gene</span></code>: Gene name of the transcript</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cell</span></code>: Cell ID that the transcript belongs to</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">centerX</span>&#160; <span class="pre">centerY</span></code>: Nuclear center coordinates for the corresponding cell</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_path</span> <span class="o">=</span> <span class="s1">&#39;./SVC/&#39;</span> 
+<span class="n">dataset</span> <span class="o">=</span> <span class="s1">&#39;data/seqfish&#39;</span> 
+<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">/seqfish_data_dict.pkl&quot;</span><span class="p">)</span>
+<span class="n">seqfish_data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;data_df&#39;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">seqfish_data</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>             x           y           gene cell nucleus batch  umi  centerX  \
+0  1217.437557  557.583252  4933401b06rik  5-0      -1     0    1     1003   
+1  1096.190309  394.835294  4933401b06rik  5-0       5     0    1     1003   
+2  1093.189494  572.832405  4933401b06rik  5-0      -1     0    1     1003   
+3  1005.120220  297.196271  4933401b06rik  5-0      -1     0    1     1003   
+4  1142.815026  378.376491  4933401b06rik  5-0      -1     0    1     1003   
+
+   centerY        type  sc_total  
+0      425  fibroblast     32224  
+1      425  fibroblast     32224  
+2      425  fibroblast     32224  
+3      425  fibroblast     32224  
+4      425  fibroblast     32224  
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>Gene2vec ortholog mapping and gene filtering</strong></p>
+<p>For mouse data, we mapped the 16,906 Gene2vec genes to mouse orthologs and preserve the common genes.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ref_gene_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s2">/data/gene2vec/convert_mmu_gene2vec_names.txt&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="c1">## for human data, use gene2vec/gene2vec_names.txt instead</span>
+<span class="n">common</span><span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;gene_list_dict&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">()))[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">ref_gene_names</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;common genes:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">common</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>common genes: 2659
+</pre></div>
+</div>
+</div>
+</div>
+<p>We then selected the top 1,000 most highly expressed genes for model training and downstream analyses.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">seqfish_data</span> <span class="o">=</span> <span class="n">seqfish_data</span><span class="p">[</span><span class="n">seqfish_data</span><span class="o">.</span><span class="n">gene</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">common</span><span class="p">)]</span>
+<span class="n">high_exp_gene</span> <span class="o">=</span> <span class="n">seqfish_data</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">&#39;gene&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">count</span><span class="p">()[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">ascending</span><span class="o">=</span><span class="kc">False</span><span class="p">)[:</span><span class="mi">1000</span><span class="p">]</span>
+<span class="n">high_exp_gene_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">high_exp_gene</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+<span class="n">gene_names</span> <span class="o">=</span> <span class="n">natsort</span><span class="o">.</span><span class="n">natsorted</span><span class="p">(</span><span class="n">high_exp_gene_id</span><span class="p">)</span>
+<span class="n">seqfish_data</span> <span class="o">=</span> <span class="n">seqfish_data</span><span class="p">[</span><span class="n">seqfish_data</span><span class="o">.</span><span class="n">gene</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">gene_names</span><span class="p">)]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;cell number:&quot;</span><span class="p">,</span><span class="n">seqfish_data</span><span class="o">.</span><span class="n">cell</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> 
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gene number:&quot;</span><span class="p">,</span><span class="n">seqfish_data</span><span class="o">.</span><span class="n">gene</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="c1"># np.savetxt(f&quot;{data_path}{dataset}/gene_names.txt&quot;, gene_names, fmt=&#39;%s&#39;)</span>
+<span class="n">cell_names</span> <span class="o">=</span> <span class="n">natsort</span><span class="o">.</span><span class="n">natsorted</span><span class="p">(</span><span class="n">seqfish_data</span><span class="p">[</span><span class="s1">&#39;cell&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="c1"># np.savetxt(f&quot;{data_path}{dataset}/cell_names.txt&quot;, cell_names, fmt=&#39;%s&#39;)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>cell number: 171
+gene number: 1000
+</pre></div>
+</div>
+</div>
+</div>
+<p>save the corresponding Gene2Vec vectors</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">chosen_indices_ref</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">gene_names</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">gene_names</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">in</span> <span class="n">ref_gene_names</span><span class="p">:</span>
+        <span class="n">index_position</span> <span class="o">=</span> <span class="n">ref_gene_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">gene_names</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="n">chosen_indices_ref</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">index_position</span><span class="p">)</span>
+<span class="n">gene2vec_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">/data/gene2vec/gene2vec_16906.npy&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;gene2vec_weight:&quot;</span><span class="p">,</span> <span class="n">gene2vec_weight</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">gene2vec_weight_filtered</span> <span class="o">=</span> <span class="n">gene2vec_weight</span><span class="p">[</span><span class="n">chosen_indices_ref</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;filtered gene2vec_weight:&quot;</span><span class="p">,</span> <span class="n">gene2vec_weight_filtered</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="c1"># np.save(f&quot;{data_path}{dataset}/gene2vec_weight_seqfish.npy&quot;, gene2vec_weight_filtered)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>gene2vec_weight: (16906, 200)
+filtered gene2vec_weight: (1000, 200)
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>load cell boundary information for each cell</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">direction_vec</span></code>: the angle of transcript relative to the positive x-axis, with the nuclear center as the origin.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">distance_to_center</span></code>: Euclidean distance between the cell boundary point and nuclear center</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cell_mask_contour</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_pickle</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">/cell_mask_contour_preprocessed.pkl&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">cell_mask_contour</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  cell    x    y  centerX  centerY  direction_vec  distance_to_center
+0  0-0  521  496     1079      724         -158.0          602.783543
+1  0-0  519  496     1079      724         -158.0          604.635427
+2  0-0  517  494     1079      724         -157.5          607.242950
+3  0-0  515  494     1079      724         -158.0          609.094410
+4  0-0  513  492     1079      724         -157.5          611.702542
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>conduct cell registration procedure</strong></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">seqfish_data</span> <span class="o">=</span> <span class="n">register_original_data</span><span class="p">(</span><span class="n">seqfish_data</span><span class="p">,</span> <span class="n">cell_mask_contour</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|██████████| 171/171 [07:26&lt;00:00,  2.61s/it]
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>              x           y  gene cell nucleus batch  umi  centerX  centerY  \
+10   828.109167  457.736354  Aatf  5-0      -1     0    1     1003      425   
+11  1128.101035  488.990636  Aatf  5-0      -1     0    1     1003      425   
+12  1039.856556  294.494083  Aatf  5-0      -1     0    1     1003      425   
+13  1182.850103  461.492268  Aatf  5-0      -1     0    1     1003      425   
+14   891.607843  440.987851  Aatf  5-0       5     0    1     1003      425   
+
+          type  sc_total  distance_to_center  direction_vec     ratio  \
+10  fibroblast     32224          177.928278          169.5  0.667541   
+11  fibroblast     32224          140.517153           27.0  0.425739   
+12  fibroblast     32224          135.610472          -74.0  0.802344   
+13  fibroblast     32224          183.514973           11.5  0.668383   
+14  fibroblast     32224          112.533657          172.0  0.409745   
+
+    angle_radians    x_norm    y_norm  
+10       2.958333 -0.656363  0.121650  
+11       0.471239  0.379336  0.193281  
+12      -1.291544  0.221156 -0.771263  
+13       0.200713  0.654965  0.133254  
+14       3.001966 -0.405758  0.057026  
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">axs</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">6</span><span class="p">))</span> 
+<span class="n">cell_mask_contour_i</span> <span class="o">=</span> <span class="n">cell_mask_contour</span><span class="p">[(</span><span class="n">cell_mask_contour</span><span class="o">.</span><span class="n">cell</span> <span class="o">==</span> <span class="s1">&#39;5-0&#39;</span><span class="p">)]</span>
+<span class="n">seqfish_data_i</span> <span class="o">=</span> <span class="n">seqfish_data</span><span class="p">[(</span><span class="n">seqfish_data</span><span class="o">.</span><span class="n">cell</span> <span class="o">==</span> <span class="s1">&#39;5-0&#39;</span><span class="p">)]</span>
+
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">cell_mask_contour_i</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">cell_mask_contour_i</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">seqfish_data_i</span><span class="p">[(</span><span class="n">seqfish_data_i</span><span class="o">.</span><span class="n">gene</span> <span class="o">==</span> <span class="s1">&#39;Aamp&#39;</span><span class="p">)][</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">seqfish_data_i</span><span class="p">[(</span><span class="n">seqfish_data_i</span><span class="o">.</span><span class="n">gene</span> <span class="o">==</span> <span class="s1">&#39;Aamp&#39;</span><span class="p">)][</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Original Points&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">cell_mask_contour_i</span><span class="p">[</span><span class="s1">&#39;centerX&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">cell_mask_contour_i</span><span class="p">[</span><span class="s1">&#39;centerY&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Original&#39;</span><span class="p">)</span> 
+
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">seqfish_data_i</span><span class="p">[(</span><span class="n">seqfish_data_i</span><span class="o">.</span><span class="n">gene</span> <span class="o">==</span> <span class="s1">&#39;Aamp&#39;</span><span class="p">)][</span><span class="s1">&#39;x_norm&#39;</span><span class="p">],</span> <span class="n">seqfish_data_i</span><span class="p">[(</span><span class="n">seqfish_data_i</span><span class="o">.</span><span class="n">gene</span> <span class="o">==</span> <span class="s1">&#39;Aamp&#39;</span><span class="p">)][</span><span class="s1">&#39;y_norm&#39;</span><span class="p">],</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Registered Points&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+<span class="n">circle</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Circle</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">add_artist</span><span class="p">(</span><span class="n">circle</span><span class="p">)</span> 
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s1">&#39;Registered&#39;</span><span class="p">)</span> 
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span><span class="n">marker</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+<span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Ignoring fixed x limits to fulfill fixed data aspect with adjustable data limits.
+Ignoring fixed y limits to fulfill fixed data aspect with adjustable data limits.
+</pre></div>
+</div>
+<img alt="../_images/aeb4365cd63e45a521e67e732d2cc3cfa2a8c18400f2269c3be2129cc48b046f.png" src="../_images/aeb4365cd63e45a521e67e732d2cc3cfa2a8c18400f2269c3be2129cc48b046f.png" />
+</div>
+</div>
+<p>Represent the subcellular spatial expression of each cell and gene as a 48×48-pixel square image, and conduct resolution reduction</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">map_all_genes</span> <span class="o">=</span> <span class="n">get_gene_map</span><span class="p">(</span><span class="n">seqfish_data</span><span class="p">,</span> <span class="n">cell_names</span><span class="p">,</span> <span class="n">gene_names</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>======&gt; Loading transcripts file
+1000 unique genes
+171 unique cells
+Converting to expression maps
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|██████████| 171/171 [17:25&lt;00:00,  6.12s/it]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;map_all_genes shape:&quot;</span><span class="p">,</span> <span class="n">map_all_genes</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> 
+<span class="c1"># np.savez_compressed(f&quot;{data_path}{dataset}/cell_gene_map.npz&quot;, image = map_all_genes)</span>
+
+<span class="n">map_all_genes_low_res</span> <span class="o">=</span> <span class="n">map_all_genes</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">map_all_genes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span><span class="n">map_all_genes</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">map_all_genes_low_res</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="n">map_all_genes_low_res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">map_all_genes_low_res</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;map_all_genes_low_res shape:&quot;</span><span class="p">,</span> <span class="n">map_all_genes_low_res</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="c1"># np.savez_compressed(&quot;f&quot;{data_path}{dataset}/cell_gene_map_low_res.npz&quot;, image = map_all_genes_low_res)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>map_all_genes shape: (171, 48, 48, 1000)
+(171, 12, 12, 1000)
+map_all_genes shape: (171, 1000, 12, 12)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">cell_id</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">cell_id</span><span class="p">:</span>
+    <span class="n">cell_gene</span> <span class="o">=</span> <span class="n">map_all_genes_low_res</span><span class="p">[</span><span class="n">cell</span><span class="p">]</span>
+    <span class="n">cell_gene_sum</span> <span class="o">=</span> <span class="n">cell_gene</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cell_gene</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cell_gene_sum</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Total gene Map: Cell &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">cell</span><span class="p">))</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cell_gene</span><span class="p">[</span><span class="n">gene_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;Bgn&#39;</span><span class="p">),:,:,],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Cell: &quot;</span> <span class="o">+</span> <span class="n">cell_names</span><span class="p">[</span><span class="n">cell</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;, Gene: &quot;</span> <span class="o">+</span> <span class="s1">&#39;Bgn&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">cell_gene</span><span class="p">[</span><span class="n">gene_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="s1">&#39;Col1a1&#39;</span><span class="p">),:,:,],</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Cell: &quot;</span> <span class="o">+</span> <span class="n">cell_names</span><span class="p">[</span><span class="n">cell</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;, Gene: &quot;</span> <span class="o">+</span> <span class="s1">&#39;Col1a1&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span>
+    <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/54a231eebf1fa9a9a8b07431f55fa6e8227fd316470bcf43f4d44fbadd48c5a1.png" src="../_images/54a231eebf1fa9a9a8b07431f55fa6e8227fd316470bcf43f4d44fbadd48c5a1.png" />
+</div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../api.html" class="btn btn-neutral float-left" title="API reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="train_seqfish_plus.html" class="btn btn-neutral float-right" title="Model training" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

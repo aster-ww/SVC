@@ -1,0 +1,694 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cell states identification via subcellular representations &mdash; SVC 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css?v=6644e6bb" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=01f34227"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Reproducibility" href="../../reproducibility.html" />
+    <link rel="prev" title="Gene co-localization analysis" href="gene_colocalization.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            SVC
+              <img src="../../_static/SVC_logo.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api.html">API reference</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../preprocess.html">Data preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../train_seqfish_plus.html">Model training</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Applications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="prediction.html"><em>In silico</em> predictions at subcellular resolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gene_colocalization.html">Gene co-localization analysis</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Cell states identification via subcellular representations</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reproducibility</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reproducibility.html">Reproducibility</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">SVC</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Applications</a></li>
+      <li class="breadcrumb-item active">Cell states identification via subcellular representations</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/tutorials/applications/evaluate_cell_state.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cell-states-identification-via-subcellular-representations">
+<h1>Cell states identification via subcellular representations<a class="headerlink" href="#cell-states-identification-via-subcellular-representations" title="Link to this heading"></a></h1>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model.train</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">model.utils</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span> 
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tqdm</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial.distance</span><span class="w"> </span><span class="kn">import</span> <span class="n">cdist</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">wilcoxon</span> 
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">data_path</span> <span class="o">=</span> <span class="s1">&#39;./SVC/&#39;</span> 
+<span class="n">dataset</span> <span class="o">=</span> <span class="s1">&#39;data/merfish_U2OS&#39;</span> 
+<span class="n">device</span> <span class="o">=</span> <span class="s1">&#39;cuda:1&#39;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gene_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}{</span><span class="n">dataset</span><span class="si">}</span><span class="s1">/gene_names.txt&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+<span class="n">gene_names</span> <span class="o">=</span> <span class="n">gene_names</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="n">cell_names</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}{</span><span class="n">dataset</span><span class="si">}</span><span class="s1">/cell_names.txt&#39;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+<span class="n">train_merfish_U2OS</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">/train_merfish_U2OS.npz&quot;</span><span class="p">)</span>  
+<span class="n">train_image</span> <span class="o">=</span> <span class="n">train_merfish_U2OS</span><span class="p">[</span><span class="s2">&quot;data_ori&quot;</span><span class="p">]</span>
+<span class="n">train_cell_morphology</span> <span class="o">=</span> <span class="n">train_merfish_U2OS</span><span class="p">[</span><span class="s2">&quot;cell_morphology&quot;</span><span class="p">]</span>
+<span class="n">train_nuclear_morphology</span> <span class="o">=</span> <span class="n">train_merfish_U2OS</span><span class="p">[</span><span class="s2">&quot;nuclear_morphology&quot;</span><span class="p">]</span>
+<span class="n">train_data_location</span> <span class="o">=</span> <span class="n">train_merfish_U2OS</span><span class="p">[</span><span class="s2">&quot;location&quot;</span><span class="p">]</span>
+<span class="n">train_cell_names</span> <span class="o">=</span> <span class="n">train_merfish_U2OS</span><span class="p">[</span><span class="s2">&quot;cell_names&quot;</span><span class="p">]</span>
+<span class="n">train_dataset</span> <span class="o">=</span> <span class="n">SVC_Dataset</span><span class="p">(</span>
+    <span class="n">data_ori</span><span class="o">=</span><span class="n">train_image</span><span class="p">,</span>
+    <span class="n">location</span><span class="o">=</span><span class="n">train_data_location</span><span class="p">,</span>
+    <span class="n">cell_morphology_vec</span><span class="o">=</span><span class="n">train_cell_morphology</span><span class="p">,</span>
+    <span class="n">nuclear_morphology_vec</span><span class="o">=</span><span class="n">train_nuclear_morphology</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;number of training cells:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">),</span><span class="s1">&#39;, number of genes:&#39;</span><span class="p">,</span> <span class="n">train_image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">train_count_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s1">output/merfish_U2OS/train_count_sum.npy&#39;</span><span class="p">)</span>
+<span class="n">read_dir</span> <span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}{</span><span class="n">dataset</span><span class="si">}</span><span class="s1">/gene2vec_weight_merfish_U2OS.npy&#39;</span>
+<span class="n">gene2vec_weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">read_dir</span><span class="p">))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span> <span class="c1">##n_gene * 200</span>
+
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span> <span class="n">shuffle</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">num_workers</span> <span class="o">=</span> <span class="mi">4</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>number of training cells: 900 , number of genes: 119
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>load the trained model and extract latent representations</strong></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ckpt_dir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}</span><span class="s2">/checkpoints/&quot;</span>
+<span class="n">ckpt</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">ckpt_dir</span> <span class="o">+</span><span class="s1">&#39;SVC_merfish_U2OS.pth&#39;</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+
+<span class="n">state</span> <span class="o">=</span> <span class="n">ckpt</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_state_dict&quot;</span><span class="p">,</span> <span class="n">ckpt</span><span class="p">)</span>  
+<span class="n">state</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="o">.</span><span class="n">removeprefix</span><span class="p">(</span><span class="s2">&quot;module.&quot;</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">SVC</span><span class="p">(</span>
+    <span class="n">gene2vec_weight</span> <span class="o">=</span> <span class="n">gene2vec_weight</span><span class="p">,</span>
+    <span class="n">use_cell_identity</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+<span class="n">all_embeddings_train</span> <span class="o">=</span> <span class="n">extract_latent_embeddings</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">loader</span><span class="o">=</span><span class="n">train_loader</span><span class="p">,</span>
+    <span class="n">use_cell_identity</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+    <span class="n">return_tensor</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+
+<span class="n">all_embeddings_train_np</span> <span class="o">=</span> <span class="n">all_embeddings_train</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+<span class="c1"># np.save(f&quot;{data_path}/output/seqfish/embeddings_train.npy&quot;, all_embeddings_train_np)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>use SVC’s representations to detect cell states and cell-to-cell variability through cell clustering</strong></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.cluster</span><span class="w"> </span><span class="kn">import</span> <span class="n">SpectralClustering</span>
+<span class="n">cosine_simi</span> <span class="o">=</span>  <span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">all_embeddings_train</span><span class="p">,</span> <span class="n">all_embeddings_train</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="p">((</span><span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">all_embeddings_train</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">all_embeddings_train</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>  
+<span class="n">n_cell</span> <span class="o">=</span> <span class="n">cosine_simi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_cell</span><span class="p">,</span> <span class="n">n_cell</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_cell</span><span class="p">)):</span>
+    <span class="n">cosine_simi_subset</span> <span class="o">=</span> <span class="n">cosine_simi</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="n">matrix_diff</span> <span class="o">=</span> <span class="n">cosine_simi</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">cosine_simi_subset</span>
+    <span class="n">distance</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">matrix_diff</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="s1">&#39;fro&#39;</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">dist</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">):]</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">):,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">distance</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+<span class="n">sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">dist</span><span class="p">)</span> 
+<span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">dist</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.</span> <span class="o">*</span> <span class="n">sigma</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+<span class="n">clustering</span> <span class="o">=</span> <span class="n">SpectralClustering</span><span class="p">(</span><span class="n">n_clusters</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">affinity</span><span class="o">=</span><span class="s1">&#39;precomputed&#39;</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">2025</span><span class="p">)</span>
+<span class="n">subcluster_labels</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">fit_predict</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+<span class="c1"># np.save(f&quot;{data_path}output/merfish_U2OS/subcluster_labels.npy&quot;, subcluster_labels)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|██████████| 900/900 [00:00&lt;00:00, 1320.16it/s]
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>UMAP visualization</strong></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">umap</span>
+<span class="n">reducer</span> <span class="o">=</span> <span class="n">umap</span><span class="o">.</span><span class="n">UMAP</span><span class="p">(</span><span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">embeddings_cosine_UMAP</span> <span class="o">=</span> <span class="n">reducer</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">cosine_simi</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">cosine_simi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">ListedColormap</span>
+<span class="n">class_names</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">custom_colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#377A9D&#39;</span><span class="p">,</span><span class="s1">&#39;#7A854F&#39;</span><span class="p">,</span><span class="s1">&#39;#e66d50&#39;</span><span class="p">,</span><span class="s1">&#39;#e7c66b&#39;</span><span class="p">]</span>  
+<span class="n">custom_map</span> <span class="o">=</span> <span class="n">ListedColormap</span><span class="p">(</span><span class="n">custom_colors</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span><span class="mi">6</span><span class="p">))</span>
+<span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">embeddings_cosine_UMAP</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">embeddings_cosine_UMAP</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span><span class="n">s</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span><span class="n">c</span> <span class="o">=</span> <span class="n">subcluster_labels</span><span class="p">,</span><span class="n">cmap</span><span class="o">=</span><span class="n">custom_map</span><span class="p">)</span>
+<span class="n">handles</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">legend_elements</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="p">,</span> <span class="n">class_names</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Cluster&quot;</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.76</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;upper left&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">17</span><span class="p">,</span><span class="n">title_fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span><span class="n">markerscale</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">yticks</span><span class="p">(</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;UMAP 1&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s2">&quot;UMAP 2&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+<span class="c1"># plt.savefig(f&quot;{data_path}output/merfish_U2OS/figures/UMAP_cell_clusters.png&quot;, bbox_inches=&#39;tight&#39;, dpi=300,transparent=True)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/4b1915aaf6b446253f89f18372ab0cde763e5b38af7a05ec30eb76ddd5544a02.png" src="../../_images/4b1915aaf6b446253f89f18372ab0cde763e5b38af7a05ec30eb76ddd5544a02.png" />
+</div>
+</div>
+<p>cluster 2 forms a smaller, isolated group indicative of a distinct outlier population</p>
+<p><strong>calculate relative distance to nuclear center as well as unspliced/spliced ratio for each gene</strong></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">truth_gene_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">train_cell_names</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">gene_names</span><span class="p">)))</span>
+<span class="n">I</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">train_cell_names</span><span class="p">)):</span>
+    <span class="n">cell_gene_real</span> <span class="o">=</span> <span class="n">train_image</span><span class="p">[</span><span class="n">cell</span><span class="p">]</span>
+    <span class="n">J</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">gene</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">gene_names</span><span class="p">)):</span>
+        <span class="n">heatmap_real</span> <span class="o">=</span> <span class="n">cell_gene_real</span><span class="p">[</span><span class="n">gene</span><span class="p">,:,:,]</span>
+        <span class="n">truth_gene_dist</span><span class="p">[</span><span class="n">I</span><span class="p">,</span><span class="n">J</span><span class="p">]</span> <span class="o">=</span> <span class="n">compute_relative_dist_to_nuclear_center</span><span class="p">(</span><span class="n">heatmap_real</span><span class="p">)</span>
+
+        <span class="n">J</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">I</span> <span class="o">+=</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">truth_gene_dist_mean_0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">truth_gene_dist</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span><span class="mi">0</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">truth_gene_dist_mean_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">truth_gene_dist</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span><span class="mi">1</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">truth_gene_dist_mean_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">truth_gene_dist</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span><span class="mi">2</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">truth_gene_dist_mean_3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanmean</span><span class="p">(</span><span class="n">truth_gene_dist</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span><span class="mi">3</span><span class="p">],</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;truth_gene_dist_mean_0:&quot;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">truth_gene_dist_mean_0</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;truth_gene_dist_mean_1:&quot;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">truth_gene_dist_mean_1</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;truth_gene_dist_mean_2:&quot;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">truth_gene_dist_mean_2</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;truth_gene_dist_mean_3:&quot;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">truth_gene_dist_mean_3</span><span class="p">))</span>
+<span class="c1">## wilcoxon test</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">wilcoxon</span>
+
+<span class="n">_</span><span class="p">,</span> <span class="n">p_value30_0</span> <span class="o">=</span> <span class="n">wilcoxon</span><span class="p">(</span><span class="n">truth_gene_dist_mean_3</span><span class="p">,</span> <span class="n">truth_gene_dist_mean_0</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">p_value31_0</span> <span class="o">=</span> <span class="n">wilcoxon</span><span class="p">(</span><span class="n">truth_gene_dist_mean_3</span><span class="p">,</span> <span class="n">truth_gene_dist_mean_1</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">p_value32_0</span> <span class="o">=</span> <span class="n">wilcoxon</span><span class="p">(</span><span class="n">truth_gene_dist_mean_3</span><span class="p">,</span> <span class="n">truth_gene_dist_mean_2</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;p_value0:&quot;</span><span class="p">,</span><span class="n">p_value30_0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;p_value1:&quot;</span><span class="p">,</span><span class="n">p_value31_0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;p_value2:&quot;</span><span class="p">,</span><span class="n">p_value32_0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>truth_gene_dist_mean_0: 0.5959493276579844
+truth_gene_dist_mean_1: 0.5874538846669943
+truth_gene_dist_mean_2: 0.5424065361933716
+truth_gene_dist_mean_3: 0.597701242864299
+p_value0: 3.637482550141077e-05
+p_value1: 1.2348894881412727e-16
+p_value2: 4.199437544475863e-16
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">spliced_unspliced</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_path</span><span class="si">}{</span><span class="n">dataset</span><span class="si">}</span><span class="s2">/splice_unsplice.npz&quot;</span><span class="p">)</span>
+<span class="n">spliced</span> <span class="o">=</span> <span class="n">spliced_unspliced</span><span class="p">[</span><span class="s2">&quot;splice&quot;</span><span class="p">]</span>
+<span class="n">unspliced</span> <span class="o">=</span> <span class="n">spliced_unspliced</span><span class="p">[</span><span class="s2">&quot;unsplice&quot;</span><span class="p">]</span>
+<span class="n">train_indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cell_names</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">train_cell_names</span><span class="p">]</span>
+<span class="n">train_spliced</span> <span class="o">=</span> <span class="n">spliced</span><span class="p">[</span><span class="n">train_indices</span><span class="p">]</span>
+<span class="n">train_unspliced</span> <span class="o">=</span> <span class="n">unspliced</span><span class="p">[</span><span class="n">train_indices</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">US_ratio</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">train_unspliced</span><span class="p">)</span><span class="o">-</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">train_spliced</span><span class="p">))</span>
+<span class="n">US_ratio_0</span> <span class="o">=</span> <span class="n">US_ratio</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">US_ratio_1</span> <span class="o">=</span> <span class="n">US_ratio</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">US_ratio_2</span> <span class="o">=</span> <span class="n">US_ratio</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">US_ratio_3</span> <span class="o">=</span> <span class="n">US_ratio</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;US_ratio_0:&quot;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">US_ratio_0</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;US_ratio_1:&quot;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">US_ratio_1</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;US_ratio_2:&quot;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">US_ratio_2</span><span class="p">))</span> 
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;US_ratio_3:&quot;</span><span class="p">,</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">US_ratio_3</span><span class="p">))</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">p_value10_1</span> <span class="o">=</span> <span class="n">wilcoxon</span><span class="p">(</span><span class="n">US_ratio_1</span><span class="p">,</span> <span class="n">US_ratio_0</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">p_value20_1</span> <span class="o">=</span> <span class="n">wilcoxon</span><span class="p">(</span><span class="n">US_ratio_2</span><span class="p">,</span> <span class="n">US_ratio_0</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
+<span class="n">_</span><span class="p">,</span> <span class="n">p_value30_1</span> <span class="o">=</span> <span class="n">wilcoxon</span><span class="p">(</span><span class="n">US_ratio_3</span><span class="p">,</span> <span class="n">US_ratio_0</span><span class="p">,</span> <span class="n">alternative</span><span class="o">=</span><span class="s1">&#39;greater&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;p_value0:&quot;</span><span class="p">,</span><span class="n">p_value10_1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;p_value1:&quot;</span><span class="p">,</span><span class="n">p_value20_1</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;p_value2:&quot;</span><span class="p">,</span><span class="n">p_value30_1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>US_ratio_0: -0.6957653599787612
+US_ratio_1: -0.626657226609145
+US_ratio_2: -0.07188431899080086
+US_ratio_3: -0.6196540992149764
+p_value0: 2.202834250094225e-11
+p_value1: 4.967700805576257e-19
+p_value2: 8.322344443407937e-10
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">get_stars</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mf">0.001</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;***&#39;</span>
+    <span class="k">elif</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mf">0.01</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;**&#39;</span>
+    <span class="k">elif</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mf">0.05</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;*&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">&#39;n.s.&#39;</span>  
+<span class="kn">import</span><span class="w"> </span><span class="nn">seaborn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sns</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span>  <span class="n">gridspec_kw</span><span class="o">=</span><span class="p">{</span> <span class="s2">&quot;hspace&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">})</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">([</span><span class="n">truth_gene_dist_mean_0</span><span class="p">,</span> <span class="n">truth_gene_dist_mean_1</span><span class="p">,</span> <span class="n">truth_gene_dist_mean_2</span><span class="p">,</span> <span class="n">truth_gene_dist_mean_3</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#D7CAE4&#39;</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="c1">#, width=0.5, linewidth=2, showfliers=False,zorder=10</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mf">0.35</span><span class="p">,</span><span class="mf">0.88</span><span class="p">)</span>
+<span class="c1"># plt.xlim(-0.5,2.5)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Distance to nuclear center&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.88</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">),</span> <span class="p">[</span><span class="s1">&#39;0.40&#39;</span><span class="p">,</span><span class="s1">&#39;0.50&#39;</span><span class="p">,</span><span class="s1">&#39;0.60&#39;</span><span class="p">,</span><span class="s1">&#39;0.70&#39;</span><span class="p">,</span><span class="s1">&#39;0.80&#39;</span><span class="p">],</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">y_offset_inter</span> <span class="o">=</span> <span class="mf">0.05</span>  
+<span class="n">y_max</span> <span class="o">=</span> <span class="mf">0.795</span>
+<span class="n">fontprops</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span> <span class="s1">&#39;ha&#39;</span><span class="p">:</span> <span class="s1">&#39;center&#39;</span><span class="p">}</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> 
+        <span class="p">[</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.09</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.01</span><span class="o">+</span><span class="mf">0.09</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.01</span><span class="o">+</span><span class="mf">0.09</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.09</span><span class="p">],</span> 
+        <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">clip_on</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span> <span class="o">+</span> <span class="mf">0.01</span><span class="o">+</span><span class="mf">0.09</span><span class="p">,</span> 
+        <span class="n">get_stars</span><span class="p">(</span><span class="n">p_value30_0</span><span class="p">),</span> 
+        <span class="o">**</span><span class="n">fontprops</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> 
+        <span class="p">[</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.06</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.01</span><span class="o">+</span><span class="mf">0.06</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.01</span><span class="o">+</span><span class="mf">0.06</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.06</span><span class="p">],</span> 
+        <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">clip_on</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.06</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">,</span> 
+        <span class="n">get_stars</span><span class="p">(</span><span class="n">p_value31_0</span><span class="p">),</span> 
+        <span class="o">**</span><span class="n">fontprops</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> 
+        <span class="p">[</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.03</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.01</span><span class="o">+</span><span class="mf">0.03</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.01</span><span class="o">+</span><span class="mf">0.03</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.03</span><span class="p">],</span> 
+        <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">clip_on</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span> <span class="o">+</span><span class="mf">0.03</span> <span class="o">+</span> <span class="mf">0.01</span><span class="p">,</span> 
+        <span class="n">get_stars</span><span class="p">(</span><span class="n">p_value32_0</span><span class="p">),</span> 
+        <span class="o">**</span><span class="n">fontprops</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">([</span><span class="n">US_ratio_0</span><span class="p">,</span> <span class="n">US_ratio_1</span><span class="p">,</span> <span class="n">US_ratio_2</span><span class="p">,</span> <span class="n">US_ratio_3</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;#e8e7bb&#39;</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="c1">#, width=0.5, linewidth=2, showfliers=False,zorder=10</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Cluster&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Unspliced/spliced ratio&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+<span class="n">y_offset_inter</span> <span class="o">=</span> <span class="mf">0.05</span>  
+<span class="n">y_max</span> <span class="o">=</span> <span class="mf">2.15</span>
+<span class="n">fontprops</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span> <span class="s1">&#39;ha&#39;</span><span class="p">:</span> <span class="s1">&#39;center&#39;</span><span class="p">}</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">],</span> 
+        <span class="p">[</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">-</span><span class="mf">0.01</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.07</span><span class="o">-</span><span class="mf">0.01</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.07</span><span class="o">-</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">-</span><span class="mf">0.01</span><span class="p">],</span> 
+        <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">clip_on</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span> <span class="o">+</span> <span class="mf">0.05</span><span class="o">+</span><span class="mf">0.01</span><span class="p">,</span> 
+        <span class="n">get_stars</span><span class="p">(</span><span class="n">p_value10_1</span><span class="p">),</span> 
+        <span class="o">**</span><span class="n">fontprops</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> 
+        <span class="p">[</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.25</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.25</span><span class="o">+</span><span class="mf">0.1</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.25</span><span class="o">+</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.25</span><span class="p">],</span> 
+        <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">clip_on</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span> <span class="o">+</span> <span class="mf">0.32</span><span class="p">,</span> 
+        <span class="n">get_stars</span><span class="p">(</span><span class="n">p_value20_1</span><span class="p">),</span> 
+        <span class="o">**</span><span class="n">fontprops</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> 
+        <span class="p">[</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.52</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.52</span><span class="o">+</span><span class="mf">0.1</span><span class="p">,</span><span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.52</span><span class="o">+</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span><span class="o">+</span><span class="mf">0.52</span><span class="p">],</span> 
+        <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">clip_on</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">y_max</span> <span class="o">-</span> <span class="n">y_offset_inter</span> <span class="o">+</span> <span class="mf">0.52</span><span class="o">+</span><span class="mf">0.07</span><span class="p">,</span> 
+        <span class="n">get_stars</span><span class="p">(</span><span class="n">p_value30_1</span><span class="p">),</span> 
+        <span class="o">**</span><span class="n">fontprops</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span><span class="mf">2.8</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="s1">&#39;-2.50&#39;</span><span class="p">,</span><span class="s1">&#39;-1.50&#39;</span><span class="p">,</span><span class="s1">&#39;-0.50&#39;</span><span class="p">,</span><span class="s1">&#39;0.50&#39;</span><span class="p">,</span><span class="s1">&#39;1.50&#39;</span><span class="p">,</span><span class="s1">&#39;2.50&#39;</span><span class="p">],</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/0b5a7eff1327fd695459e1147aa23676f13a4d70adbaa458174c7ef97c86950b.png" src="../../_images/0b5a7eff1327fd695459e1147aa23676f13a4d70adbaa458174c7ef97c86950b.png" />
+</div>
+</div>
+<p><strong>compare marker gene expression</strong></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">exp_level</span> <span class="o">=</span> <span class="n">train_image</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">4.8</span><span class="p">),</span>  <span class="n">gridspec_kw</span><span class="o">=</span><span class="p">{</span> <span class="s2">&quot;wspace&quot;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">})</span>
+<span class="n">marker_gene_G2M</span> <span class="o">=</span><span class="s1">&#39;CKAP5&#39;</span>
+<span class="n">exp_level_0</span><span class="p">,</span> <span class="n">exp_level_1</span><span class="p">,</span> <span class="n">exp_level_2</span><span class="p">,</span> <span class="n">exp_level_3</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">exp_level</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span><span class="n">i</span><span class="p">][:,</span><span class="n">gene_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">marker_gene_G2M</span><span class="p">)])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;G2M marker gene:&quot;</span><span class="p">,</span><span class="n">marker_gene_G2M</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">exp_level_0</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">exp_level_1</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">exp_level_2</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">exp_level_3</span><span class="p">)],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;lightblue&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">marker_gene_G2M</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span><span class="n">fontstyle</span><span class="o">=</span><span class="s1">&#39;italic&#39;</span><span class="p">)</span>
+
+<span class="n">marker_gene_S</span> <span class="o">=</span><span class="s1">&#39;BRCA2&#39;</span>
+<span class="n">exp_level_0</span><span class="p">,</span> <span class="n">exp_level_1</span><span class="p">,</span> <span class="n">exp_level_2</span><span class="p">,</span> <span class="n">exp_level_3</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">exp_level</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span><span class="n">i</span><span class="p">][:,</span><span class="n">gene_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">marker_gene_S</span><span class="p">)])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;S marker gene:&quot;</span><span class="p">,</span><span class="n">marker_gene_S</span><span class="p">)</span>
+<span class="n">sns</span><span class="o">.</span><span class="n">violinplot</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">exp_level_0</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">exp_level_1</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">exp_level_2</span><span class="p">),</span><span class="n">np</span><span class="o">.</span><span class="n">log1p</span><span class="p">(</span><span class="n">exp_level_3</span><span class="p">)],</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;orange&#39;</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">marker_gene_S</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">,</span><span class="n">fontstyle</span><span class="o">=</span><span class="s1">&#39;italic&#39;</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span><span class="mf">0.5</span><span class="p">),</span> <span class="p">[</span><span class="s1">&#39;4.0&#39;</span><span class="p">,</span><span class="s1">&#39;4.5&#39;</span><span class="p">,</span><span class="s1">&#39;5.0&#39;</span><span class="p">,</span><span class="s1">&#39;5.5&#39;</span><span class="p">,</span><span class="s1">&#39;6.0&#39;</span><span class="p">,</span><span class="s1">&#39;6.5&#39;</span><span class="p">,</span><span class="s1">&#39;7.0&#39;</span><span class="p">,</span><span class="s1">&#39;7.5&#39;</span><span class="p">],</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Cluster&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Expression level&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">],</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="s1">&#39;1&#39;</span><span class="p">,</span><span class="s1">&#39;2&#39;</span><span class="p">,</span><span class="s1">&#39;3&#39;</span><span class="p">,</span><span class="s1">&#39;4&#39;</span><span class="p">],</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">15</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;gray&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">,</span><span class="n">linewidth</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s1">&#39;Cluster&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">22</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s1">&#39;Expression level&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">18</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>G2M marker gene: CKAP5
+S marker gene: BRCA2
+</pre></div>
+</div>
+<img alt="../../_images/d5642d808dc3ea1ccfafc5867ccac4bc64730367c41030166b59ba9cd7f61e39.png" src="../../_images/d5642d808dc3ea1ccfafc5867ccac4bc64730367c41030166b59ba9cd7f61e39.png" />
+</div>
+</div>
+<p>cells in cluster 2 exhibit concentrated nuclear-peripheral transcript localization and a markedly elevated unspliced/spliced ratio, while also displaying increased CKAP5 expression</p>
+<p><strong>calculate gene colocalization score for each cluster based on pairwise distances of each gene pair within cells</strong></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gene_colocal_score_all</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">4</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">gene_names</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">gene_names</span><span class="p">)))</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+    <span class="n">embeddings_train_cell_cycle_i</span> <span class="o">=</span> <span class="n">all_embeddings_train_np</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span>
+    <span class="n">train_count_sum</span>  <span class="o">=</span> <span class="n">train_image</span><span class="p">[</span><span class="n">subcluster_labels</span> <span class="o">==</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+    <span class="n">gene_colocal_score</span> <span class="o">=</span> <span class="n">cal_gene_colocal_score</span><span class="p">(</span><span class="n">embeddings_train_cell_cycle_i</span><span class="p">,</span> <span class="n">gene_names</span><span class="p">,</span> <span class="n">train_count_sum</span><span class="p">)</span>
+    
+    <span class="n">gene_colocal_score_all</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">gene_colocal_score</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  0%|          | 0/256 [00:00&lt;?, ?it/s]
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|██████████| 256/256 [00:01&lt;00:00, 235.11it/s]
+100%|██████████| 344/344 [00:01&lt;00:00, 234.21it/s]
+100%|██████████| 11/11 [00:00&lt;00:00, 233.71it/s]
+100%|██████████| 289/289 [00:01&lt;00:00, 235.10it/s]
+</pre></div>
+</div>
+</div>
+</div>
+<p><strong>extract and compare top 30 co-localized gene pairs for each cluster</strong></p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gene_pairs_30</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+
+    <span class="n">upper_triangle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">gene_colocal_score_all</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+    <span class="n">gene_pairs_30_cluster_i</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">):</span>
+
+        <span class="n">idx1</span><span class="p">,</span><span class="n">idx2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">upper_triangle</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">upper_triangle</span><span class="p">))</span>
+        <span class="n">idx1</span><span class="p">,</span><span class="n">idx2</span> <span class="o">=</span> <span class="n">idx1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">idx2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">gene_pairs_30_cluster_i</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">gene_names</span><span class="p">[</span><span class="n">idx1</span><span class="p">],</span><span class="n">gene_names</span><span class="p">[</span><span class="n">idx2</span><span class="p">]))</span>
+        <span class="n">upper_triangle</span><span class="p">[</span><span class="n">idx1</span><span class="p">,</span><span class="n">idx2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="n">gene_pairs_30</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gene_pairs_30_cluster_i</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[(&#39;LRP1&#39;, &#39;THBS1&#39;), (&#39;NOTCH2&#39;, &#39;THBS1&#39;), (&#39;PRPF8&#39;, &#39;TLN1&#39;), (&#39;FBN2&#39;, &#39;THBS1&#39;), (&#39;COL5A1&#39;, &#39;THBS1&#39;), (&#39;FASN&#39;, &#39;TLN1&#39;), (&#39;COL5A1&#39;, &#39;LRP1&#39;), (&#39;IGF2R&#39;, &#39;THBS1&#39;), (&#39;FBN2&#39;, &#39;LRP1&#39;), (&#39;LRP1&#39;, &#39;NOTCH2&#39;), (&#39;COL5A1&#39;, &#39;FBN2&#39;), (&#39;COL5A1&#39;, &#39;NOTCH2&#39;), (&#39;FASN&#39;, &#39;PRPF8&#39;), (&#39;IGF2R&#39;, &#39;LRP1&#39;), (&#39;PLXNA1&#39;, &#39;THBS1&#39;), (&#39;FBN2&#39;, &#39;NOTCH2&#39;), (&#39;IGF2R&#39;, &#39;NOTCH2&#39;), (&#39;TLN1&#39;, &#39;USP9X&#39;), (&#39;FBN2&#39;, &#39;IGF2R&#39;), (&#39;COL5A1&#39;, &#39;IGF2R&#39;), (&#39;PRKDC&#39;, &#39;TLN1&#39;), (&#39;SRRM2&#39;, &#39;TNRC6A&#39;), (&#39;CKAP5&#39;, &#39;TLN1&#39;), (&#39;NOTCH2&#39;, &#39;PLXNA1&#39;), (&#39;CKAP5&#39;, &#39;FASN&#39;), (&#39;CREBBP&#39;, &#39;TLN1&#39;), (&#39;PRPF8&#39;, &#39;USP9X&#39;), (&#39;COL5A1&#39;, &#39;PLXNA1&#39;), (&#39;LMTK2&#39;, &#39;THBS1&#39;), (&#39;LRP1&#39;, &#39;PLXNA1&#39;)]
+[(&#39;NOTCH2&#39;, &#39;THBS1&#39;), (&#39;LRP1&#39;, &#39;THBS1&#39;), (&#39;PRPF8&#39;, &#39;TLN1&#39;), (&#39;COL5A1&#39;, &#39;THBS1&#39;), (&#39;FASN&#39;, &#39;TLN1&#39;), (&#39;FBN2&#39;, &#39;THBS1&#39;), (&#39;PRKDC&#39;, &#39;TLN1&#39;), (&#39;IGF2R&#39;, &#39;THBS1&#39;), (&#39;TLN1&#39;, &#39;USP9X&#39;), (&#39;LRP1&#39;, &#39;NOTCH2&#39;), (&#39;COL5A1&#39;, &#39;NOTCH2&#39;), (&#39;COL5A1&#39;, &#39;LRP1&#39;), (&#39;FASN&#39;, &#39;PRKDC&#39;), (&#39;PLXNA1&#39;, &#39;THBS1&#39;), (&#39;FBN2&#39;, &#39;NOTCH2&#39;), (&#39;FASN&#39;, &#39;PRPF8&#39;), (&#39;FBN2&#39;, &#39;LRP1&#39;), (&#39;SPTBN1&#39;, &#39;TLN1&#39;), (&#39;CKAP5&#39;, &#39;TLN1&#39;), (&#39;PRKDC&#39;, &#39;PRPF8&#39;), (&#39;SRRM2&#39;, &#39;TNRC6A&#39;), (&#39;COL5A1&#39;, &#39;FBN2&#39;), (&#39;IGF2R&#39;, &#39;LRP1&#39;), (&#39;IGF2R&#39;, &#39;NOTCH2&#39;), (&#39;PRKDC&#39;, &#39;USP9X&#39;), (&#39;FBN2&#39;, &#39;IGF2R&#39;), (&#39;CREBBP&#39;, &#39;TLN1&#39;), (&#39;PRKDC&#39;, &#39;SPTBN1&#39;), (&#39;MYH10&#39;, &#39;TLN1&#39;), (&#39;CKAP5&#39;, &#39;PRKDC&#39;)]
+[(&#39;CKAP5&#39;, &#39;TLN1&#39;), (&#39;SRRM2&#39;, &#39;TNRC6A&#39;), (&#39;FASN&#39;, &#39;USP9X&#39;), (&#39;NOTCH2&#39;, &#39;THBS1&#39;), (&#39;SPTBN1&#39;, &#39;TLN1&#39;), (&#39;ASCC3&#39;, &#39;PRKDC&#39;), (&#39;CENPF&#39;, &#39;SPTBN1&#39;), (&#39;CKAP5&#39;, &#39;FASN&#39;), (&#39;CKAP5&#39;, &#39;SPTBN1&#39;), (&#39;CREBBP&#39;, &#39;SRRM2&#39;), (&#39;FASN&#39;, &#39;PRKDC&#39;), (&#39;FASN&#39;, &#39;PRPF8&#39;), (&#39;PRKDC&#39;, &#39;TLN1&#39;), (&#39;PRKDC&#39;, &#39;USP9X&#39;), (&#39;PRPF8&#39;, &#39;SPTBN1&#39;), (&#39;SPTBN1&#39;, &#39;THBS1&#39;), (&#39;CBX5&#39;, &#39;TLN1&#39;), (&#39;CENPF&#39;, &#39;PRKDC&#39;), (&#39;CKAP5&#39;, &#39;CREBBP&#39;), (&#39;CKAP5&#39;, &#39;PRKCA&#39;), (&#39;CKAP5&#39;, &#39;PRKDC&#39;), (&#39;CKAP5&#39;, &#39;SRRM2&#39;), (&#39;CKAP5&#39;, &#39;UBR5&#39;), (&#39;CKAP5&#39;, &#39;ZNF592&#39;), (&#39;CREBBP&#39;, &#39;UBR5&#39;), (&#39;FASN&#39;, &#39;TLN1&#39;), (&#39;LRP1&#39;, &#39;THBS1&#39;), (&#39;PRKDC&#39;, &#39;PRPF8&#39;), (&#39;PRKDC&#39;, &#39;SRRM2&#39;), (&#39;PRPF8&#39;, &#39;TLN1&#39;)]
+[(&#39;NOTCH2&#39;, &#39;THBS1&#39;), (&#39;LRP1&#39;, &#39;THBS1&#39;), (&#39;COL5A1&#39;, &#39;THBS1&#39;), (&#39;PRPF8&#39;, &#39;TLN1&#39;), (&#39;FASN&#39;, &#39;TLN1&#39;), (&#39;FBN2&#39;, &#39;THBS1&#39;), (&#39;IGF2R&#39;, &#39;THBS1&#39;), (&#39;COL5A1&#39;, &#39;LRP1&#39;), (&#39;FBN2&#39;, &#39;NOTCH2&#39;), (&#39;PRKDC&#39;, &#39;TLN1&#39;), (&#39;COL5A1&#39;, &#39;NOTCH2&#39;), (&#39;COL5A1&#39;, &#39;FBN2&#39;), (&#39;FASN&#39;, &#39;PRPF8&#39;), (&#39;LRP1&#39;, &#39;NOTCH2&#39;), (&#39;TLN1&#39;, &#39;USP9X&#39;), (&#39;FBN2&#39;, &#39;LRP1&#39;), (&#39;PLXNA1&#39;, &#39;THBS1&#39;), (&#39;CKAP5&#39;, &#39;TLN1&#39;), (&#39;IGF2R&#39;, &#39;NOTCH2&#39;), (&#39;IGF2R&#39;, &#39;LRP1&#39;), (&#39;FBN2&#39;, &#39;IGF2R&#39;), (&#39;COL5A1&#39;, &#39;IGF2R&#39;), (&#39;FASN&#39;, &#39;PRKDC&#39;), (&#39;NOTCH2&#39;, &#39;PLXNA1&#39;), (&#39;PRKDC&#39;, &#39;PRPF8&#39;), (&#39;SRRM2&#39;, &#39;TNRC6A&#39;), (&#39;LMTK2&#39;, &#39;THBS1&#39;), (&#39;CREBBP&#39;, &#39;TLN1&#39;), (&#39;SPTBN1&#39;, &#39;TLN1&#39;), (&#39;PRPF8&#39;, &#39;USP9X&#39;)]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gene_pair_label</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">union_pair</span><span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+<span class="n">union_pair</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">union_pair</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">union_pair</span><span class="p">:</span>
+    <span class="n">gene_pair_label_i</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">gene_pair_label_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Cluster 0&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
+        <span class="n">gene_pair_label_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Cluster 1&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span>
+        <span class="n">gene_pair_label_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Cluster 2&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">gene_pairs_30</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+        <span class="n">gene_pair_label_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Cluster 3&#39;</span><span class="p">)</span>
+    <span class="n">gene_pair_label</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gene_pair_label_i</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cluster_0_specific_pair</span><span class="p">,</span> <span class="n">cluster_1_specific_pair</span><span class="p">,</span> <span class="n">cluster_2_specific_pair</span><span class="p">,</span> <span class="n">cluster_3_specific_pair</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span> 
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">gene_pair_label</span><span class="p">:</span>     
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;Cluster 0&#39;</span><span class="p">]:</span>         
+        <span class="n">cluster_0_specific_pair</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>     
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;Cluster 1&#39;</span><span class="p">]:</span>         
+        <span class="n">cluster_1_specific_pair</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>     
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;Cluster 2&#39;</span><span class="p">]:</span>         
+        <span class="n">cluster_2_specific_pair</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>     
+    <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="p">[</span><span class="s1">&#39;Cluster 3&#39;</span><span class="p">]:</span>         
+        <span class="n">cluster_3_specific_pair</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> 
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;number of cluster 0/1/2/3 specific pairs:&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_0_specific_pair</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_1_specific_pair</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_2_specific_pair</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">cluster_3_specific_pair</span><span class="p">))</span> 
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>number of cluster 0/1/2/3 specific pairs: 2 2 16 0
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.lines</span><span class="w"> </span><span class="kn">import</span> <span class="n">Line2D</span>
+
+<span class="n">G</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+<span class="n">G</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">union_pair</span><span class="p">)</span>
+
+<span class="n">components</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">G</span><span class="p">))</span>
+<span class="n">G_sub</span> <span class="o">=</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">components</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+<span class="n">edge_to_labels</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">e</span><span class="p">,</span> <span class="n">labs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">union_pair</span><span class="p">,</span> <span class="n">gene_pair_label</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">G_sub</span><span class="o">.</span><span class="n">edges</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">labs_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">labs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;;&quot;</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">labs_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">labs</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">e</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">edge_to_labels</span><span class="p">:</span>
+        <span class="n">edge_to_labels</span><span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">labs_list</span><span class="p">:</span>
+        <span class="n">edge_to_labels</span><span class="p">[</span><span class="n">e</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lab</span><span class="p">)</span>
+
+<span class="n">unique_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Cluster 0&#39;</span><span class="p">,</span><span class="s1">&#39;Cluster 1&#39;</span><span class="p">,</span> <span class="s1">&#39;Cluster 2&#39;</span><span class="p">,</span> <span class="s1">&#39;Cluster 3&#39;</span><span class="p">]</span>
+<span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;#F8E57F&#39;</span><span class="p">,</span><span class="s1">&#39;#ADE17A&#39;</span><span class="p">,</span><span class="s1">&#39;#76B7E4&#39;</span><span class="p">,</span><span class="s1">&#39;#EC866F&#39;</span><span class="p">]</span>
+<span class="n">label_to_color</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">colors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unique_labels</span><span class="p">)}</span>
+
+<span class="n">pos</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">spring_layout</span><span class="p">(</span><span class="n">G_sub</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">2025</span><span class="p">)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">),</span> <span class="n">labs_list</span> <span class="ow">in</span> <span class="n">edge_to_labels</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">labs_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">lab</span> <span class="k">for</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">labs_list</span> <span class="k">if</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">unique_labels</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labs_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+    <span class="n">x1</span><span class="p">,</span> <span class="n">y1</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">u</span><span class="p">]</span>
+    <span class="n">x2</span><span class="p">,</span> <span class="n">y2</span> <span class="o">=</span> <span class="n">pos</span><span class="p">[</span><span class="n">v</span><span class="p">]</span>
+
+    <span class="n">dx</span> <span class="o">=</span> <span class="n">x2</span> <span class="o">-</span> <span class="n">x1</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="n">y2</span> <span class="o">-</span> <span class="n">y1</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-9</span>  
+
+    <span class="n">nx_perp</span> <span class="o">=</span> <span class="o">-</span><span class="n">dy</span> <span class="o">/</span> <span class="n">length</span>
+    <span class="n">ny_perp</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">/</span> <span class="n">length</span>
+
+    <span class="n">m</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labs_list</span><span class="p">)</span>
+    <span class="n">base</span> <span class="o">=</span> <span class="mf">0.03</span> 
+    <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">offsets</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">offsets</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span> <span class="o">-</span> <span class="p">(</span><span class="n">m</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">base</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">)]</span>
+
+    <span class="k">for</span> <span class="n">lab</span><span class="p">,</span> <span class="n">off</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">labs_list</span><span class="p">,</span> <span class="n">offsets</span><span class="p">):</span>
+        <span class="n">ox</span> <span class="o">=</span> <span class="n">nx_perp</span> <span class="o">*</span> <span class="n">off</span> <span class="o">*</span> <span class="n">length</span>
+        <span class="n">oy</span> <span class="o">=</span> <span class="n">ny_perp</span> <span class="o">*</span> <span class="n">off</span> <span class="o">*</span> <span class="n">length</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">x1</span> <span class="o">+</span> <span class="n">ox</span><span class="p">,</span> <span class="n">x2</span> <span class="o">+</span> <span class="n">ox</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">y1</span> <span class="o">+</span> <span class="n">oy</span><span class="p">,</span> <span class="n">y2</span> <span class="o">+</span> <span class="n">oy</span><span class="p">],</span>
+            <span class="n">color</span><span class="o">=</span><span class="n">label_to_color</span><span class="p">[</span><span class="n">lab</span><span class="p">],</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+            <span class="n">alpha</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_nodes</span><span class="p">(</span><span class="n">G_sub</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">node_color</span><span class="o">=</span><span class="s1">&#39;#D4DDDC&#39;</span><span class="p">,</span> <span class="n">node_size</span><span class="o">=</span><span class="mi">1500</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">edgecolors</span> <span class="o">=</span> <span class="s1">&#39;#A1AFAC&#39;</span><span class="p">,</span><span class="n">linewidths</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">texts</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">draw_networkx_labels</span><span class="p">(</span>
+    <span class="n">G_sub</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span>
+    <span class="n">font_size</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+    <span class="n">font_color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+    <span class="n">font_weight</span><span class="o">=</span><span class="s2">&quot;bold&quot;</span><span class="p">,</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span>
+<span class="p">)</span>
+
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">texts</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">set_fontstyle</span><span class="p">(</span><span class="s2">&quot;italic&quot;</span><span class="p">)</span>   
+
+<span class="n">handles</span> <span class="o">=</span> <span class="p">[</span><span class="n">Line2D</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">color</span><span class="o">=</span><span class="n">label_to_color</span><span class="p">[</span><span class="n">l</span><span class="p">],</span> <span class="n">lw</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">unique_labels</span><span class="p">]</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">handles</span><span class="p">,</span> <span class="n">unique_labels</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">0.95</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">),</span> <span class="n">ncol</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">labelspacing</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set_axis_off</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../../_images/554c1fec6fa183bcd92c1f40b3d35ea0ad75288a43ca6a66db5480e0f1e2169f.png" src="../../_images/554c1fec6fa183bcd92c1f40b3d35ea0ad75288a43ca6a66db5480e0f1e2169f.png" />
+</div>
+</div>
+<p>the co-localization pattern of cluster 2 is distinct from the others</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="gene_colocalization.html" class="btn btn-neutral float-left" title="Gene co-localization analysis" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../reproducibility.html" class="btn btn-neutral float-right" title="Reproducibility" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
