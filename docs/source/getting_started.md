@@ -25,11 +25,17 @@ SVC introduces unique features in realizing AI-powered virtual cells (AIVC) in t
 
 ## Installation
 
+### 1. Clone the repository
+
 ```bash
 git clone https://github.com/aster-ww/SVC.git
 cd SVC
 ```
-
+### 2.  Create the conda environment
+```bash
+conda env create -f environment.yml
+conda activate SVC
+```
 ---
 
 Visit our [group website](https://xiangzhou.github.io/) for more statistical tools on analyzing genetics, genomics and transcriptomics data.
