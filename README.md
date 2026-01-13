@@ -3,13 +3,20 @@
 **SVC (Spatially embedded Virtual Cell)** is a Vision Transformer-based Spatial Virtual Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity.
 
 ---
+
 ## Installation
+
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/aster-ww/SVC.git
 cd SVC
 ```
-
+### 2.  Create the conda environment
+```bash
+conda env create -f environment.yml
+conda activate SVC
+```
 ---
 ## Documentation
 
