@@ -18,7 +18,9 @@ cd SVC
 conda env create -f environment.yml
 conda activate SVC
 ```
+
 Using GPUs is highly recommended. Installation typically takes 10 to 20 minutes.
+
 ---
 ## Documentation
 
