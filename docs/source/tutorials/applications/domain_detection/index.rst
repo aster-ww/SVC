@@ -1,4 +1,4 @@
-Applications
+Spatial domain detection
 ============
 
 .. toctree::
