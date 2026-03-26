@@ -7,4 +7,5 @@ Applications
    prediction
    gene_colocalization
    evaluate_cell_state
-   
+   domain_detection/index
+

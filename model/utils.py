@@ -401,3 +401,59 @@ def postprocess_predictions_original(predictions_pixel, df_cell_contour):
     predictions_pixel['y_original'] = predictions_pixel.apply(lambda row: row['distance_to_center'] * np.sin(row['angle_radians']) + row['centerY'], axis=1)
 
     return predictions_pixel
+
+
+def save_cosine_similarity_subset(
+    model,
+    train_loader,
+    device,
+    cell_median,
+    out_file,
+    batch_start,
+    batch_end=None,
+):
+    model.eval()
+    cosine_simi_part = []
+
+    with torch.no_grad():
+        for i, (inputs_ori, cell_morphology, nuclear_morphology, location, cell_type) in enumerate(train_loader):
+            if i < batch_start:
+                continue
+            if batch_end is not None and i > batch_end:
+                break
+
+            inputs_ori = inputs_ori.to(device)
+            location = location.to(device).float()
+            cell_type = cell_type.to(device).float()
+            cell_morphology = cell_morphology.to(device).float()
+            nuclear_morphology = nuclear_morphology.to(device).float()
+
+            size_factor = inputs_ori.sum((1, 2, 3)) / cell_median
+            size_factor = size_factor.unsqueeze(1).unsqueeze(2).unsqueeze(3)
+            inputs = inputs_ori / size_factor
+
+            mask = torch.zeros(inputs.shape[0], inputs.shape[1], dtype=torch.bool, device=device)
+
+            latent, _, _ = model(inputs, mask, location, cell_morphology, nuclear_morphology, cell_type)
+
+            cosine_simi_batch = torch.bmm(latent, latent.transpose(1, 2)) / (
+                (torch.norm(latent, dim=2, keepdim=True)) *
+                (torch.norm(latent, dim=2, keepdim=True)).transpose(1, 2)
+            )
+
+            cosine_simi_part.append(cosine_simi_batch.cpu())
+
+            del inputs_ori, location, cell_type, cell_morphology, nuclear_morphology
+            del size_factor, inputs, mask, latent, cosine_simi_batch
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+    cosine_simi_part = torch.cat(cosine_simi_part, dim=0)
+    print(cosine_simi_part.shape)
+
+    np.savez(
+        out_file,
+        cosine_simi_scaling=(cosine_simi_part * 10000 + 10000).numpy().astype(np.uint16)
+    )
+
+    del cosine_simi_part
