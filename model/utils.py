@@ -9,6 +9,7 @@ from tqdm import tqdm
 from typing import Sequence, List, Union 
 import pandas as pd 
 from scipy.spatial.distance import cdist
+import heapq
 
 class CosineAnnealingWarmupRestarts(_LRScheduler):
     """
@@ -457,3 +458,68 @@ def save_cosine_similarity_subset(
     )
 
     del cosine_simi_part
+
+
+def create_sparse_distance_matrix(D, n, k=10, dtype=np.float32):
+    mat = lil_matrix((n,n), dtype=dtype)
+    for i in range(n):
+        row = D[i, :].copy() 
+        row[i] = np.inf 
+        
+        indices = heapq.nsmallest(k, range(n), key=lambda x: row[x])
+        values = row[indices]
+
+        mat[i, indices] = values
+        
+        if i % 10000 == 0:
+            print(f"Processed {i}/{n} rows")
+    
+    return mat.tocsr()
+
+def create_sparse_distance_matrix2(D, n1,n2, k=10, dtype=np.float32):
+    mat = lil_matrix((n1,n2), dtype=dtype)
+    for i in range(n1):
+        row = D[i, :].copy()
+        indices = heapq.nsmallest(k, range(n2), key=lambda x: row[x])
+        values = row[indices]
+        mat[i, indices] = values
+        
+        if i % 10000 == 0:
+            print(f"Processed {i}/{n1} rows")
+    
+    return mat.tocsr()
+
+def convert_to_csr1(cosine_simi, k=10):
+    N, n_gene, _ = cosine_simi.shape
+    D = np.zeros((N, N))
+    if not isinstance(cosine_simi, torch.Tensor):
+        cosine_simi = torch.Tensor(cosine_simi).to(device)
+
+    for i in tqdm(range(N)):
+        B_subset = cosine_simi[i+1:]
+        matrix_diff = cosine_simi[i] - B_subset
+        distance = torch.norm(matrix_diff, p='fro', dim=(1, 2))
+        D[i, (i+1):] = D[(i+1):,i] = distance.cpu().numpy()
+
+    csr_D = create_sparse_distance_matrix(D, n=N, k=k)/10000
+    return csr_D
+
+def convert_to_csr2(cosine_simi_1, cosine_simi_2, k=10):
+    if not isinstance(cosine_simi_1, torch.Tensor):
+        cosine_simi_1 = torch.Tensor(cosine_simi_1).to(device)
+    if not isinstance(cosine_simi_2, torch.Tensor):
+        cosine_simi_2 = torch.Tensor(cosine_simi_2).to(device)
+    N1, n_gene, _ = cosine_simi_1.shape
+    N2, _, _ = cosine_simi_2.shape
+    
+    D = np.zeros((N1, N2))
+    for i in tqdm(range(N1)):
+    
+        matrix_diff = cosine_simi_1[i] - cosine_simi_2
+    
+        distance = torch.norm(matrix_diff, p='fro', dim=(1, 2))
+        
+        D[i] = distance.cpu().numpy()
+
+    csr_D = create_sparse_distance_matrix2(D, n1=N1,n2=N2, k=k)/10000
+    return csr_D
