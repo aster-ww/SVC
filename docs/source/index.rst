@@ -16,7 +16,11 @@ Welcome to the documentation site.
 
    tutorials/preprocess
    tutorials/train_seqfish_plus
-   tutorials/applications/index
+   tutorials/prediction
+   tutorials/gene_colocalization
+   tutorials/evaluate_cell_state
+   tutorials/extract_latent_replicate1
+   tutorials/spatial_domain_detection
 
 .. toctree::    
    :maxdepth: 1    

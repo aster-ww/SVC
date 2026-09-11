@@ -2,6 +2,12 @@
 
 **SVC (Spatially embedded Virtual Cell)** is a Vision Transformer (ViT)-based spatial virtual cell model trained on subcellular spatial transcriptomics data that provide fine-grained molecular localization within each cell while retaining higher-level cellular and tissue context. It learns cell-specific gene dependencies to represent and predict subcellular transcript organization within native tissue context.
 
+```{image} _static/input_data.png
+:alt: Subcellular spatial transcriptomics data
+:align: center
+:width: 100%
+```
+
 ---
 
 ## Model features
