@@ -1,5 +1,4 @@
 import math
-import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
@@ -10,7 +9,7 @@ from functools import partial
 from contextlib import contextmanager
 
 from local_attention import LocalAttention
-from model.performer_pytorch.reversible import ReversibleSequence, SequentialSequence
+from svc.reversible import ReversibleSequence, SequentialSequence
 
 try:
     from apex import amp
@@ -253,29 +252,20 @@ class FastAttention(nn.Module):
         if output_attentions:
             v_diag = torch.eye(v.shape[-2]).to(device)
             v_diag = v_diag.unsqueeze(0).unsqueeze(0).repeat(v.shape[0],v.shape[1],1,1)
-            # attn_weights = torch.zeros(1, 1, len(inds), len(inds)).to(device).to(torch.float16)
-            # attn_weights = torch.zeros(1, q.shape[1], len(inds), len(inds)).to(device).to(torch.float16)
+         
             attn_weights = torch.zeros(1, 1, q.shape[2], q.shape[2]).to(device).to(torch.float16)
             attn_weights_count = 0
-            for head_dim in range(q.shape[1]):##10
-                # attn_weights[0, head_dim] = torch.abs(attn_fn(q[:,head_dim].to(torch.float16), k[:,head_dim].to(torch.float16), v_diag[:,head_dim].to(torch.float16)))[0, inds][:, inds]
+            for head_dim in range(q.shape[1]):
                 attn_weights_0 = torch.abs(attn_fn(q[:, head_dim].to(torch.float16), k[:, head_dim].to(torch.float16), v_diag[:, head_dim].to(torch.float16)))
-                # print("head_dim:", head_dim,"q.shape:", q.shape, "k.shape:", k.shape, "v_diag.shape:", v_diag.shape)
-                # print("attn_weights_0 shape:", attn_weights_0.shape)
-                # print("torch.isnan(attn_weights_0)",torch.isnan(attn_weights_0))
                 if torch.isnan(attn_weights_0).int().sum()==0:
                    attn_weights += attn_weights_0
                    attn_weights_count +=1
-                # attn_weights += torch.abs(attn_fn(q[:, head_dim].to(torch.float16), k[:, head_dim].to(torch.float16), v_diag[:, head_dim].to(torch.float16)))
-                # attn_weights += norm_tensor(torch.abs(attn_fn(q[:,head_dim].to(torch.float16), k[:,head_dim].to(torch.float16), v_diag[:,head_dim].to(torch.float16))), dim=-1)
             if attn_weights_count > 0:
                attn_weights /= attn_weights_count
-            # attn_weights /= q.shape[1]
             return out, attn_weights
         else:
             return out
 
-# classes
 
 class ReZero(nn.Module):
     def __init__(self, fn):
@@ -417,17 +407,6 @@ class SelfAttention(nn.Module):
         else:
             return self.dropout(out)
 
-# positional embeddings
-
-class AbsolutePositionalEmbedding(nn.Module):
-    def __init__(self, dim, max_seq_len):
-        super().__init__()
-        self.emb = nn.Embedding(max_seq_len, dim)
-
-    def forward(self, x):
-        t = torch.arange(x.shape[1], device=x.device)
-        return self.emb(t)
-
 # rotary positional embedding helpers
 
 def rotate_every_two(x):
@@ -442,20 +421,6 @@ def apply_rotary_pos_emb(q, k, sinu_pos):
     sin, cos = map(lambda t: repeat(t, 'b n -> b (n j)', j = 2), (sin, cos))
     q, k = map(lambda t: (t * cos) + (rotate_every_two(t) * sin), (q, k))
     return q, k
-
-# sinusoidal positional embeddings
-
-class Gene2VecPositionalEmbedding(nn.Module):
-    def __init__(self, dim, max_seq_len):
-        super().__init__()
-        gene2vec_weight = np.load('../data/gene2vec_16906.npy')
-        gene2vec_weight = np.concatenate((gene2vec_weight, np.zeros((1, gene2vec_weight.shape[1]))), axis=0)
-        gene2vec_weight = torch.from_numpy(gene2vec_weight)
-        self.emb = nn.Embedding.from_pretrained(gene2vec_weight)
-
-    def forward(self, x):
-        t = torch.arange(x.shape[1], device=x.device)
-        return self.emb(t)
 
 # performer
 
@@ -549,100 +514,3 @@ class Performer(nn.Module):
         if self.auto_check_redraw:
             self.check_redraw_projections()
         return self.net(x, output_attentions = output_attentions, **kwargs)
-
-class PerformerLM(nn.Module):
-    def __init__(
-        self,
-        *,
-        num_tokens,                         # num of tokens
-        max_seq_len,                        # max length of sequence
-        dim,                                # dim of tokens
-        depth,                              # layers
-        heads,                              # num of heads
-        dim_head = 64,                      # dim of heads
-        local_attn_heads = 0,
-        local_window_size = 256,
-        causal = False,
-        ff_mult = 4,
-        nb_features = None,
-        feature_redraw_interval = 1000,
-        reversible = False,
-        ff_chunks = 1,
-        ff_glu = False,
-        emb_dropout = 0.,
-        ff_dropout = 0.,
-        attn_dropout = 0.,
-        generalized_attention = False,
-        kernel_fn = nn.ReLU(),
-        use_scalenorm = False,
-        use_rezero = False,
-        cross_attend = False,
-        no_projection = False,
-        tie_embed = False,                  # False: output is num of tokens, True: output is dim of tokens  //multiply final embeddings with token weights for logits, like gpt decoder//
-        g2v_position_emb = True,            # priority: gene2vec, no embedding
-        auto_check_redraw = True,
-        qkv_bias = False
-    ):
-        super().__init__()
-        local_attn_heads = cast_tuple(local_attn_heads)
-
-        self.max_seq_len = max_seq_len
-        self.token_emb = nn.Embedding(num_tokens, dim)
-
-        if g2v_position_emb:
-            self.pos_emb = Gene2VecPositionalEmbedding(dim, max_seq_len)
-            self.layer_pos_emb = Always(None)
-        else:
-            self.pos_emb = torch.zeros_like
-            self.layer_pos_emb = Always(None)
-
-        self.dropout = nn.Dropout(emb_dropout)
-
-        self.performer = Performer(dim, depth, heads, dim_head, local_attn_heads, local_window_size, causal, ff_mult, nb_features, feature_redraw_interval, reversible, ff_chunks, generalized_attention, kernel_fn, use_scalenorm, use_rezero, ff_glu, ff_dropout, attn_dropout, cross_attend, no_projection, auto_check_redraw, qkv_bias)
-        self.norm = nn.LayerNorm(dim)
-        self.to_out = nn.Linear(dim, num_tokens) if not tie_embed else None
-
-    def check_redraw_projections(self):
-        self.performer.check_redraw_projections()
-
-    def fix_projection_matrices_(self):
-        self.performer.fix_projection_matrices_()
-
-    def forward(self, x, return_encodings = False, output_attentions = False, **kwargs):
-        b, n, device = *x.shape, x.device
-        assert n <= self.max_seq_len, f'sequence length {n} must be less than the max sequence length {self.max_seq_len}'
-
-        # token and positional embedding
-        x = self.token_emb(x)
-        if output_attentions:
-            x.requires_grad_()    # used for attn_map output
-        x = x + self.pos_emb(x)
-        x = self.dropout(x)
-
-        # performer layers
-        layer_pos_emb = self.layer_pos_emb(x)
-
-        if output_attentions:
-            x, attn_weights = self.performer(x, pos_emb = layer_pos_emb, output_attentions = output_attentions, **kwargs)
-            # norm and to logits
-            x = self.norm(x)
-            if return_encodings:
-                return x, attn_weights
-
-            if exists(self.to_out):
-                return self.to_out(x), attn_weights
-
-            return (x @ self.token_emb.weight.t()), attn_weights
-        else:
-            x = self.performer(x, pos_emb = layer_pos_emb, output_attentions = output_attentions, **kwargs)
-
-            # norm and to logits
-            x = self.norm(x)
-            if return_encodings:
-                return x
-
-            if exists(self.to_out):
-                x = self.to_out(x)
-                return x
-
-            return x @ self.token_emb.weight.t()
