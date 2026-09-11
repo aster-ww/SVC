@@ -10,6 +10,10 @@ checkpoints/
 *.pth
 *.npy
 *.npz
+!gene2vec/*.npy
+
+# data
+data/
 
 # Sphinx build output
 docs/_build/
