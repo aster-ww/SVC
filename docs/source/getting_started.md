@@ -29,7 +29,7 @@ The five inputs are mapped to five corresponding embeddings:
 ```{image} _static/svc_model.png
 :alt: The SVC model
 :align: center
-:width: 100%
+:width: 70%
 ```
 
 **Self-supervised masked image modeling.**
@@ -42,7 +42,7 @@ Each gene within each cell is represented by two gene-level embeddings, and each
 ```{image} _static/applications.png
 :alt: Applications of SVC across subcellular, cell and tissue levels
 :align: center
-:width: 100%
+:width: 70%
 ```
 
 **Subcellular level**
