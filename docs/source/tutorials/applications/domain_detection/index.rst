@@ -1,5 +1,5 @@
 Spatial domain detection
-============
+========================
 
 .. toctree::
    :maxdepth: 1
