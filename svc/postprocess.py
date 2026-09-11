@@ -94,7 +94,8 @@ def find_closest_point_postprocess(df1, df2, angle_col, type_col):
 def postprocess_predictions_original(predictions_pixel, df_cell_contour):
     """Map the radial-ratio table back to (x, y) in the original section, using
     each cell's own contour."""
-    predictions_pixel[['centerX', 'centerY', 'distance_to_center']] = 0
+    predictions_pixel[['centerX', 'centerY']] = 0
+    predictions_pixel['distance_to_center'] = 0.0
 
     for cell in tqdm(predictions_pixel.cell.unique()):
         cell_center_x = df_cell_contour.centerX[df_cell_contour.cell == cell].values[0]
