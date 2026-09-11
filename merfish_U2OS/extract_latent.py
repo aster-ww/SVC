@@ -9,14 +9,16 @@ Output: <out> .npz with emb (n_cells, n_genes, 384) float16, cell_name, split, g
 
 Usage:
     python extract_latent.py --data-root /path/to/data \
-        --ckpt ./output/merfish_U2OS/seed2026/checkpoint.pth \
+        --ckpt ./output/merfish_U2OS/checkpoint.pth \
         --out latent_merfish_U2OS.npz [--l2-normalize]
 """
 
 import argparse
 import os
 import sys
+import warnings
 
+warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np

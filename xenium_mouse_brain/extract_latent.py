@@ -6,14 +6,16 @@ genes.
 
 Usage:
     python extract_latent.py --data-root /path/to/data \
-        --ckpt ./output/xenium_mouse_brain/seed2026/checkpoint.pth \
+        --ckpt ./output/xenium_mouse_brain/checkpoint.pth \
         --out latent_xenium_mouse_brain.npz [--cell-type Astro] [--l2-normalize]
 """
 
 import argparse
 import os
 import sys
+import warnings
 
+warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np

@@ -6,14 +6,16 @@ genes.
 
 Usage:
     python extract_latent.py --data-root /path/to/data \
-        --ckpt ./output/xenium_breast_cancer/seed2026/checkpoint.pth \
+        --ckpt ./output/xenium_breast_cancer/checkpoint.pth \
         --out latent_xenium_breast_cancer.npz [--cell-type Myoepi_ACTA2+] [--l2-normalize]
 """
 
 import argparse
 import os
 import sys
+import warnings
 
+warnings.filterwarnings("ignore")
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
