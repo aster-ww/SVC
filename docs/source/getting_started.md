@@ -51,21 +51,13 @@ Each gene within each cell is represented by two gene-level embeddings, and each
 :width: 70%
 ```
 
-**Subcellular level**
-
-- Prediction of fine-grained expression patterns for unmeasured genes within individual cells
-- Spatial expression imputation across genes and cells at subcellular resolution
-- Inference of subcellular gene-gene co-localization patterns
-- Characterization of context-specific changes in subcellular organization across different cellular or spatial environments
-- *In silico* prediction of perturbation-induced changes in subcellular spatial expression
-
-**Cell and tissue level**
-
-The learned representations can also be used for cell- and tissue-level analyses:
-
-- Cell-level gene expression imputation
-- Cell clustering
-- Spatial domain detection
+| Subcellular level | Cell and tissue level |
+|---|---|
+| Prediction of fine-grained expression patterns for unmeasured genes within individual cells | Cell-level gene expression imputation |
+| Spatial expression imputation across genes and cells at subcellular resolution | Cell clustering |
+| Inference of subcellular gene-gene co-localization patterns | Spatial domain detection |
+| Characterization of context-specific changes in subcellular organization across different cellular or spatial environments | |
+| *In silico* prediction of perturbation-induced changes in subcellular spatial expression | |
 
 &emsp;&emsp;•<br>&emsp;&emsp;•<br>&emsp;&emsp;•
 
@@ -94,10 +86,13 @@ The processed datasets and the trained model checkpoints are on Zenodo:
 The tutorials read them through two environment variables, each defaulting to a path relative to
 the notebook, which is where they sit when the deposit is unpacked next to this repository:
 
-- `SVC_ROOT` — this repository, for `import svc` (default: `../../..`)
-- `SVC_DATA_ROOT` — the processed data, unpacked as `<SVC_DATA_ROOT>/<dataset>/` (default: `../../../data`)
+```{note}
+`SVC_ROOT` — this repository, for `import svc` (default: `../../..`)
+
+`SVC_DATA_ROOT` — the processed data, unpacked as `<SVC_DATA_ROOT>/<dataset>/` (default: `../../../data`)
 
 `checkpoints.zip` from the same deposit unpacks into `../../../checkpoints`.
+```
 
 ```bash
 export SVC_ROOT=/path/to/SVC
