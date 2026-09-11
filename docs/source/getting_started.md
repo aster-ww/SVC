@@ -86,4 +86,26 @@ conda activate SVC
 ```
 ---
 
+## Data
+
+The processed datasets and the trained model checkpoints are on Zenodo:
+<https://doi.org/10.5281/zenodo.22693727>
+
+The tutorials read them through two environment variables, each defaulting to a path relative to
+the notebook, which is where they sit when the deposit is unpacked next to this repository:
+
+- `SVC_ROOT` — this repository, for `import svc` (default: `../../..`)
+- `SVC_DATA_ROOT` — the processed data, unpacked as `<SVC_DATA_ROOT>/<dataset>/` (default: `../../../data`)
+
+`checkpoints.zip` from the same deposit unpacks into `../../../checkpoints`.
+
+```bash
+export SVC_ROOT=/path/to/SVC
+export SVC_DATA_ROOT=/path/to/data
+```
+
+Each tutorial lists the files it reads and writes.
+
+---
+
 Visit our [group website](https://xiangzhou.github.io/) for more statistical tools on analyzing genetics, genomics and transcriptomics data.
