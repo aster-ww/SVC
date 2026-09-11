@@ -9,6 +9,12 @@
 **Multi-modal and multi-scale integration.**
 SVC integrates multi-modal and multi-scale information from five complementary inputs: registered gene images that capture gene subcellular spatial localization; prior gene-gene relationships derived from existing pretrained models; images of cell and nuclear morphologies; each cell's local spatial neighborhood; and optional cell type or state labels.
 
+```{image} _static/data_input.png
+:alt: The five inputs and the embeddings they are mapped to
+:align: center
+:width: 100%
+```
+
 **Five input and embedding types.**
 The five inputs are mapped to five corresponding embeddings:
 
@@ -20,12 +26,24 @@ The five inputs are mapped to five corresponding embeddings:
 | Local spatial neighborhood | Cell-level neighbor embedding |
 | Cell type or state labels (optional) | Cell-level identity embedding |
 
+```{image} _static/svc_model.png
+:alt: The SVC model
+:align: center
+:width: 100%
+```
+
 **Self-supervised masked image modeling.**
 Each gene within each cell is represented by two gene-level embeddings, and each cell is represented by three types of cell-level embeddings; these representations are combined and fed into a Performer encoder block. SVC is trained using a self-supervised masked image modeling procedure, in which a random subset of gene expression images in each cell is masked. A decoder then reconstructs their spatial expression patterns by minimizing pixel- and cell-level loss functions.
 
 ---
 
 ## Applications
+
+```{image} _static/applications.png
+:alt: Applications of SVC across subcellular, cell and tissue levels
+:align: center
+:width: 100%
+```
 
 **Subcellular level**
 
@@ -42,6 +60,8 @@ The learned representations can also be used for cell- and tissue-level analyses
 - Cell-level gene expression imputation
 - Cell clustering
 - Spatial domain detection
+
+&emsp;&emsp;•<br>&emsp;&emsp;•<br>&emsp;&emsp;•
 
 ---
 
