@@ -5,7 +5,7 @@
 ```{image} _static/input_data.png
 :alt: Subcellular spatial transcriptomics data
 :align: center
-:width: 100%
+:width: 80%
 ```
 
 ---
