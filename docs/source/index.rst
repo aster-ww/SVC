@@ -18,6 +18,7 @@ Welcome to the documentation site.
    tutorials/train_seqfish_plus
    tutorials/prediction
    tutorials/gene_colocalization
+   tutorials/disease_imputation
    tutorials/evaluate_cell_state
    tutorials/cross_modal_retrieval
 
