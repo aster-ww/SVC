@@ -1,6 +1,6 @@
 # API reference
 
-## `svc.SVC`
+## `svc.model.SVC`
 
 SVC is implemented with a Vision Transformer backbone and a Performer encoder, comprising
 12 Performer layers with 12 attention heads per layer. Each gene within each cell is
