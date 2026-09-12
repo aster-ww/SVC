@@ -32,7 +32,7 @@ from svc.model import SVC
 K_SCALES = (4,)
 K_NB = max(K_SCALES)
 N_LAYERS = 3
-BATCH = 32
+BATCH = 16
 USE_CELL_IDENTITY = False
 SPLITS = ['train', 'test']
 

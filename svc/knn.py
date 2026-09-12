@@ -41,7 +41,6 @@ def build_knn(location, k=10, batch_id=None):
     nb_dist = np.full((N, k), 1e9, dtype=np.float32)
 
     unique_batches = np.unique(batch_id)
-    n_short = 0
     for b in unique_batches:
         sel = np.where(batch_id == b)[0]                         # global indices in this batch
         n_b = sel.shape[0]
@@ -49,7 +48,6 @@ def build_knn(location, k=10, batch_id=None):
             print(f"  [warn] batch {b!r}: only {n_b} cell(s) — neighbors padded with self")
             for i in sel:
                 nb_idx[i, :] = i                                  # pad with self
-            n_short += n_b
             continue
         k_eff = min(k, n_b - 1)                                  # can't return more than n_b - 1 real neighbors
         nn = NearestNeighbors(n_neighbors=k_eff + 1, algorithm='auto', n_jobs=-1)
@@ -68,10 +66,9 @@ def build_knn(location, k=10, batch_id=None):
                 for col in range(k_eff, k):
                     nb_idx[i, col]  = i
                     nb_dist[i, col] = 1e9
-            n_short += n_b
             print(f"  [warn] batch {b!r}: {n_b} cells < k+1={k+1} — last {k-k_eff} slot(s) padded")
 
     assert (nb_idx >= 0).all(), "some nb_idx left at -1 — batch handling bug"
 
-    print(f"  built kNN: N={N}, k={k}, batches={len(unique_batches)}, short={n_short}")
+    print(f"  built kNN: N={N}, k={k}")
     return nb_idx, nb_dist

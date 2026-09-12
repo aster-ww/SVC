@@ -86,13 +86,11 @@ The processed datasets and the trained model checkpoints are on Zenodo:
 The tutorials read them through two environment variables, each defaulting to a path relative to
 the notebook, which is where they sit when the deposit is unpacked next to this repository:
 
-```{note}
 `SVC_ROOT` — this repository, for `import svc` (default: `../../..`)
 
 `SVC_DATA_ROOT` — the processed data, unpacked as `<SVC_DATA_ROOT>/<dataset>/` (default: `../../../data`)
 
 `checkpoints.zip` from the same deposit unpacks into `../../../checkpoints`.
-```
 
 ```bash
 export SVC_ROOT=/path/to/SVC
