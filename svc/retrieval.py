@@ -171,8 +171,11 @@ class CrossModalRetriever:
         """(n_held_out, top_k) indices into `held_out_idx_`, best match first."""
         return np.argsort(-self.similarity_, axis=1)[:, :top_k]
 
-    def score(self, relevance='instance', ground_truth=None, top_k=5, groups=None):
-        """Mean per-query AUROC over held-out cells.
+    def roc(self, relevance='instance', ground_truth=None, top_k=5, groups=None,
+            n_grid=301):
+        """Per-query ROC over held-out cells, averaged on a common grid.
+
+        Returns (false positive rate grid, mean true positive rate, mean AUROC).
 
         relevance='instance'    only the query's own target is positive.
         relevance='similarity'  the `top_k` targets most similar to the query's
@@ -200,7 +203,8 @@ class CrossModalRetriever:
             g = np.asarray(groups)[self.held_out_idx_]
             pool = g[:, None] == g[None, :]
 
-        aucs = []
+        grid = np.linspace(0, 1, n_grid)
+        tprs, aucs = [], []
         for i in range(n):
             m = pool[i]
             sc = s[i][m]
@@ -218,8 +222,13 @@ class CrossModalRetriever:
             ls = lab[np.argsort(-sc)]
             tpr = np.concatenate([[0], np.cumsum(ls) / n_pos])
             fpr = np.concatenate([[0], np.cumsum(~ls) / n_neg])
+            tprs.append(np.interp(grid, fpr, tpr))
             aucs.append(np.trapz(tpr, fpr))
-        return float(np.mean(aucs))
+        return grid, np.mean(tprs, 0), float(np.mean(aucs))
+
+    def score(self, relevance='instance', ground_truth=None, top_k=5, groups=None):
+        """Mean per-query AUROC over held-out cells; see `roc`."""
+        return self.roc(relevance, ground_truth, top_k, groups)[2]
 
 
 @torch.no_grad()

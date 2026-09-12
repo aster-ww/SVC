@@ -19,8 +19,7 @@ Welcome to the documentation site.
    tutorials/prediction
    tutorials/gene_colocalization
    tutorials/evaluate_cell_state
-   tutorials/extract_latent_replicate1
-   tutorials/spatial_domain_detection
+   tutorials/cross_modal_retrieval
 
 .. toctree::    
    :maxdepth: 1    
