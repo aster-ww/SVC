@@ -19,6 +19,7 @@ Welcome to the documentation site.
    tutorials/prediction
    tutorials/gene_colocalization
    tutorials/disease_imputation
+   tutorials/perturbation
    tutorials/evaluate_cell_state
    tutorials/cross_modal_retrieval
 
