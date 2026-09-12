@@ -85,7 +85,7 @@ Processed data and the trained model checkpoints used in our project are deposit
 ---
 ## 🔁 Reproducibility
 
-Code for reproducing the main figures of the manuscript is available at [https://github.com/aster-ww/SVC-reproducibility](https://github.com/aster-ww/SVC-reproducibility), where each figure has a notebook together with the precomputed files it reads.
+Code for reproducing the figures in the manuscript is available at [https://github.com/aster-ww/SVC-reproducibility](https://github.com/aster-ww/SVC-reproducibility), where each figure has a notebook together with the precomputed files it reads.
 
 ---
 ## ✉️ Contact
