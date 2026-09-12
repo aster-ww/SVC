@@ -10,7 +10,8 @@ from svc.losses import (
     compute_cell_sum_loss,
     lambda_sum_at,
 )
-from svc.metrics import cosine_similarity, pcc_rowwise, spatial_pcc
+from svc.metrics import (cosine_similarity, distance_to_center, pcc_rowwise,
+                         spatial_pcc)
 from svc.scheduler import CosineAnnealingWarmupRestarts
 from svc.augment import apply_d4, d4_augment, _D4_ELEMENTS
 
@@ -25,6 +26,7 @@ __all__ = [
     'compute_cell_sum_loss',
     'lambda_sum_at',
     'cosine_similarity',
+    'distance_to_center',
     'pcc_rowwise',
     'spatial_pcc',
     'CosineAnnealingWarmupRestarts',

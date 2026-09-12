@@ -26,7 +26,8 @@ from sklearn.model_selection import KFold
 from torch.utils.data import DataLoader, Dataset
 
 from svc.losses import BACKGROUND_PIXELS
-from svc.metrics import cosine_similarity, pcc_rowwise, spatial_pcc
+from svc.metrics import (cosine_similarity, distance_to_center, pcc_rowwise,
+                         spatial_pcc)
 from svc.model import SVC
 
 K_SCALES = (4, 16, 64)
@@ -129,9 +130,6 @@ fg_mask = foreground_flat.numpy().astype(bool)
 kf = KFold(n_splits=N_FOLDS, shuffle=True, random_state=KFOLD_RANDOM_STATE)
 groups = [np.array(gene_names)[idx] for _, idx in kf.split(gene_names)]
 
-
-_ii, _jj = np.indices((12, 12))
-DIST_WEIGHT = np.sqrt((_ii + 0.5 - 6) ** 2 + (_jj + 0.5 - 6) ** 2) / 6
 
 
 def evaluate_model(gene_names, groups):
@@ -257,20 +255,8 @@ def evaluate_model(gene_names, groups):
     pred_gene_mean  = pred_cell.mean(0); truth_gene_mean = truth_cell.mean(0)
 
     # mean distance-to-center of each gene's transcripts
-    pred_total  = pred.sum(axis=(-1, -2)); truth_total = test_image_eval.sum(axis=(-1, -2))
-    def _dist_weighted(arr, chunk=4096):
-        out = np.empty(arr.shape[:2], dtype=np.float64)
-        for s in range(0, arr.shape[0], chunk):
-            out[s:s + chunk] = (arr[s:s + chunk] * DIST_WEIGHT).sum(axis=(-1, -2))
-        return out
-
-    pred_rr     = _dist_weighted(pred)
-    truth_rr    = _dist_weighted(test_image_eval)
-    pred_ratio  = np.zeros_like(pred_total,  dtype=float)
-    truth_ratio = np.zeros_like(truth_total, dtype=float)
-    _pnz = pred_total != 0; _tnz = truth_total != 0
-    pred_ratio[_pnz]  = np.minimum(pred_rr[_pnz]  / pred_total[_pnz],  1.0)
-    truth_ratio[_tnz] = np.minimum(truth_rr[_tnz] / truth_total[_tnz], 1.0)
+    pred_ratio  = distance_to_center(pred)
+    truth_ratio = distance_to_center(test_image_eval)
     pred_ratio_mean  = pred_ratio.sum(0) / np.maximum((pred_ratio != 0).sum(0), 1)
     truth_ratio_mean = truth_ratio.sum(0) / np.maximum((truth_ratio != 0).sum(0), 1)
     dist_pcc = np.corrcoef(pred_ratio_mean, truth_ratio_mean)[0, 1]

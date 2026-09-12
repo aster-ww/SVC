@@ -29,3 +29,22 @@ def spatial_pcc(pred_fg, truth_fg):
     if not valid.any():
         return np.nan
     return float(np.nanmean(pcc_rowwise(pred_fg[valid], truth_fg[valid])))
+
+_ii, _jj = np.indices((12, 12))
+DIST_WEIGHT = np.sqrt((_ii + 0.5 - 6) ** 2 + (_jj + 0.5 - 6) ** 2) / 6
+
+
+def distance_to_center(maps, chunk=4096):
+    """Count-weighted mean distance from the nuclear center of each registered map.
+
+    maps    : (..., 12, 12) counts, real or predicted
+    returns : (...) in [0, 1], 0 at the nuclear center and 1 on the cell boundary;
+              0 where a map holds no counts
+    """
+    maps = np.asarray(maps)
+    total = maps.sum(axis=(-1, -2))
+    weighted = np.empty(maps.shape[:-2], dtype=np.float64)
+    for s in range(0, len(maps), chunk):
+        weighted[s:s + chunk] = (maps[s:s + chunk] * DIST_WEIGHT).sum(axis=(-1, -2))
+    ratio = np.where(total != 0, weighted / np.where(total == 0, 1, total), 0.0)
+    return np.where(total != 0, np.minimum(ratio, 1.0), 0.0)
