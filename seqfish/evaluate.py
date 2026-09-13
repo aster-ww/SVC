@@ -1,7 +1,7 @@
 """
-Evaluate SVC on the seqFISH+ (NIH/3T3) test cells by k-fold cross-validation
-over GENES: each fold's genes are masked in every test cell and predicted from
-the remaining genes, the auxiliary modalities and the neighbor context.
+Evaluate SVC on the seqFISH+ (NIH/3T3) test cells by K-fold masked gene prediction:
+each fold's genes are masked in every test cell and predicted from the remaining
+genes, the auxiliary modalities and the neighbor context.
 
 Metrics: per-gene spatial PCC / RMSE / cosine;
 per-gene cell-level PCC / RMSE / cosine on per-(cell, gene) totals; per-cell
@@ -45,7 +45,7 @@ ap.add_argument('--ckpt-dir', default='./output/seqfish',
                      " checkpoint_seqFISH.pth)")
 ap.add_argument('--save-predictions', action='store_true',
                 help="also write prediction_mu.npz and prediction_r.npz into --ckpt-dir, "
-                     "the cross-validated per-gene predictions used by postprocess.py")
+                     "the masked gene predictions used by postprocess.py")
 args = ap.parse_args()
 
 dataset_dir = os.path.join(args.data_root, 'seqfish')

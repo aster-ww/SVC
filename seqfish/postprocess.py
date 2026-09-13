@@ -1,5 +1,5 @@
 """
-Turn SVC's cross-validated predictions into transcript coordinates (seqFISH+).
+Turn SVC's masked gene predictions into transcript coordinates (seqFISH+).
 
 Inputs:
     --pred-dir   directory holding prediction_mu.npz / prediction_r.npz, written
