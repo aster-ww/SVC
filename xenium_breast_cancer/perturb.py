@@ -2,16 +2,13 @@
 Deplete one gene in silico and read the response of the others.
 
 The depleted gene's input is clamped to a low percentile of its own distribution
-among the perturbed cells -- its 12x12 map is scaled down, so the spatial pattern
-is kept and only the magnitude falls -- and the same clamp is applied to that gene
-in the neighbor-expression context of every neighboring cell. Each downstream gene
-is then masked from the input in turn and predicted from the intact and from the
-depleted input, giving the change in its predicted count and in the relative
-distance of its transcripts to the nuclear center.
+among the perturbed cells, and the same clamp is applied to that gene in the
+neighbor-expression context of every neighboring cell. Each downstream gene is
+then masked from the input in turn and predicted from the unperturbed and the
+depleted input.
 
-The size factor is computed once from the intact input with the downstream gene
-masked, and is used for both arms, so the difference between them is the model's
-response and not a change in depth.
+For each downstream-gene prediction, the size factor is computed from the
+unperturbed input and held fixed for both predictions.
 
 Output: <out> .npz with genes, cell_name, truth_count, size_factor and
 count/distance before and after, plus each cell's predicted 12x12 map in both

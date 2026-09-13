@@ -1,12 +1,8 @@
 """
 Impute the genes of the training panel that a target dataset does not measure.
 
-The model is applied unchanged: the measured genes are placed at their column in
-the training vocabulary, every remaining column is left at zero and masked, and
-the model predicts those columns from the observed genes, the morphology and the
-spatial neighborhood. The size factor is the observed count over the median of
-the training cells restricted to the same measured genes, so a target panel that
-is a subset of the vocabulary is not read as a set of unusually small cells.
+The size factor is the observed count divided by the median count of the training
+cells over the measured genes.
 
 Output: <out> .npz with prediction (n_cells, n_imputed, 12, 12) float16, r,
 size_factor, genes, cell_name.
