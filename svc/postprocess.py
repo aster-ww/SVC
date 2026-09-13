@@ -32,8 +32,8 @@ def postprocess_sampling(prediction_mu, prediction_r, seed):
             cell_gene_mu = np.repeat(cell_gene_mu / 4, 4, axis=0)
             cell_gene_mu = np.repeat(cell_gene_mu / 4, 4, axis=1)
 
-            cell_gene_r = np.repeat(cell_gene_r, 4, axis=1)
-            cell_gene_r = np.repeat(cell_gene_r, 4, axis=0)
+            cell_gene_r = np.repeat(cell_gene_r / 4, 4, axis=0)
+            cell_gene_r = np.repeat(cell_gene_r / 4, 4, axis=1)
             mask = cell_gene_r > 0
             count_data_0 = np.zeros((48, 48))
             n = cell_gene_r[mask]

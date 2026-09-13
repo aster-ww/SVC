@@ -37,7 +37,7 @@ gene_encoding, mu, r = model(
 ### Returns
 
 `(gene_encoding, mu, r)` — the per-(cell, gene) representation, (cells, genes, 384), and the
-mean and dispersion of each gene's predicted image, both (cells, genes, 12, 12).
+mean and inverse dispersion of each gene's predicted image, both (cells, genes, 12, 12).
 
 ### Construction
 
