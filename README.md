@@ -1,6 +1,6 @@
 # SVC
 
-**SVC: A Vision Transformer-based Spatial Virtual Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity**
+**SVC Deciphers Subcellular Spatial Transcriptomic Heterogeneity through Vision Transformer-based Modeling**
 
 Hui Wan, Penghui Yang, Siyu Hou, Jade Xiaoqing Wang and Xiang Zhou\*
 
