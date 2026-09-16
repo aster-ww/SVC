@@ -80,6 +80,8 @@ The original datasets used in this project are publicly available:
 
 - **[MERFISH mouse brain](https://download.brainimagelibrary.org/29/3c/293cc39ceea87f6d/)**
 
+- **[Pretrained Gene2vec vectors](https://drive.weixin.qq.com/s?k=AJEAIQdfAAozQt5B8k)**
+
 Processed data and the trained model checkpoints used in our project are deposited on Zenodo: [https://doi.org/10.5281/zenodo.22693727](https://doi.org/10.5281/zenodo.22693727).
 
 ---
