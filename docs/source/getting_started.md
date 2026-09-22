@@ -1,6 +1,6 @@
 # Getting started
 
-**SVC** is a unified artificial intelligence (AI)-based predictive model for subcellular-resolution spatial transcriptomics (ST) that captures and predicts the subcellular localization of transcripts within individual cells in their spatial tissue context. It learns cell-specific gene dependencies to represent and predict subcellular transcript organization within native tissue context.
+**SVC** is a Vision Transformer (ViT)-based spatially and virtually embedded cell model for subcellular-resolution spatial transcriptomics (ST). It represents each gene's subcellular localization as an image patch and uses the other genes within the same cell as context, learning the spatial dependencies that govern subcellular transcript organization within native tissue context.
 
 ```{image} _static/input_data.png
 :alt: Subcellular spatial transcriptomics data

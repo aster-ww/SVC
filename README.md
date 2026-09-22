@@ -1,6 +1,6 @@
 # SVC
 
-**SVC Deciphers Subcellular Spatial Transcriptomic Heterogeneity through Vision Transformer-based Modeling**
+**SVC: A Vision Transformer-based Spatially and Virtually Embedded Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity**
 
 Hui Wan, Penghui Yang, Siyu Hou, Jade Xiaoqing Wang and Xiang Zhou\*
 
@@ -8,7 +8,7 @@ Hui Wan, Penghui Yang, Siyu Hou, Jade Xiaoqing Wang and Xiang Zhou\*
 
 ## 🔬 Overview
 
-SVC is a unified artificial intelligence (AI)-based predictive model for subcellular-resolution spatial transcriptomics (ST) that captures and predicts the subcellular localization of transcripts within individual cells in their spatial tissue context. It builds upon a Vision Transformer (ViT)-based framework that enables multi-modal and multi-scale modeling of subcellular ST data. SVC integrates subcellular transcript localization with cell-level identity and morphological features, while also preserving microenvironment context at the tissue level. In addition, it incorporates prior biological knowledge about gene functional relationships learned from external transcriptomic datasets, while naturally accommodating network connectivity across genes. SVC enables spatially grounded virtual representations of individual genes and cells, which is essential for an integrated understanding of cellular function.
+SVC is a Vision Transformer (ViT)-based spatially and virtually embedded cell model for subcellular-resolution spatial transcriptomics (ST). It represents each gene's subcellular localization as an image patch and uses the other genes within the same cell as context, enabling subcellular contextual learning of the spatial dependencies that govern intracellular transcript organization. By integrating gene-function priors, cell morphology, spatial context, and, when available, cell identity, SVC captures unified, spatially grounded representations across genes and cells that connect subcellular organization to cellular state and tissue microenvironment. These representations support prediction of cell-specific subcellular transcript localization and co-organization, subcellular imputation of unmeasured genes, *in silico* perturbation, and transfer to cell- and tissue-level tasks.
 
 <img src="docs/source/_static/overview.png" width="100%">
 
