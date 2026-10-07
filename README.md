@@ -47,6 +47,20 @@ conda activate SVC
 
 Using GPUs is highly recommended. Installation typically takes 10 to 20 minutes.
 
+### Requirements
+
+All versions are pinned in [`environment.yml`](environment.yml). The released results were produced with **Python 3.10.19** and:
+
+| Package | Version | Package | Version |
+|---|---|---|---|
+| torch | 2.5.1 | pandas | 2.2.3 |
+| einops | 0.8.1 | anndata | 0.11.4 |
+| local-attention | 1.9.15 | tqdm | 4.66.5 |
+| numpy | 1.26.4 | natsort | 8.4.0 |
+| scipy | 1.12.0 | scikit-learn | 1.7.2 |
+
+`environment.yml` also pins the packages the figure notebooks in [SVC-reproducibility](https://github.com/aster-ww/SVC-reproducibility) use: ipykernel 7.1.0, matplotlib 3.9.2, seaborn 0.13.2, networkx 3.4.2, umap-learn 0.5.6, scanpy 1.10.3 and openpyxl 3.1.5.
+
 ---
 ## 📖 Documentation
 
