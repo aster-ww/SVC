@@ -2,7 +2,7 @@
 
 **SVC: A Vision Transformer-based Spatially and Virtually Embedded Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity**
 
-Hui Wan, Penghui Yang, Siyu Hou, Jade Xiaoqing Wang and Xiang Zhou\*
+Hui Wan, Penghui Yang, Siyu Hou, Jade Wang and Xiang Zhou\*
 
 ---
 
