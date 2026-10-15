@@ -4,6 +4,8 @@
 
 Hui Wan, Penghui Yang, Siyu Hou, Jade Wang and Xiang Zhou\*
 
+Preprint: [bioRxiv 2026.10.07.757371](https://doi.org/10.64898/2026.10.07.757371)
+
 ---
 
 ## 🔬 Overview
@@ -102,6 +104,24 @@ Processed data and the trained model checkpoints used in our project are deposit
 ## 🔁 Reproducibility
 
 Code for reproducing the figures in the manuscript is available at [https://github.com/aster-ww/SVC-reproducibility](https://github.com/aster-ww/SVC-reproducibility), where each figure has a notebook together with the precomputed files it reads.
+
+---
+## 📝 Citation
+
+If you use SVC in your research, please cite:
+
+Wan, H., Yang, P., Hou, S., Wang, J.X. and Zhou, X. SVC: A Vision Transformer-based Spatially and Virtually Embedded Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity. *bioRxiv* (2026). https://doi.org/10.64898/2026.10.07.757371
+
+```bibtex
+@article{wan2026svc,
+  title     = {SVC: A Vision Transformer-based Spatially and Virtually Embedded Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity},
+  author    = {Wan, Hui and Yang, Penghui and Hou, Siyu and Wang, Jade and Zhou, Xiang},
+  journal   = {bioRxiv},
+  year      = {2026},
+  doi       = {10.64898/2026.10.07.757371},
+  publisher = {Cold Spring Harbor Laboratory}
+}
+```
 
 ---
 ## ✉️ Contact

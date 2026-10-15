@@ -105,4 +105,10 @@ export SVC_DATA_ROOT=/path/to/data
 
 ---
 
+## Citation
+
+Wan, H., Yang, P., Hou, S., Wang, J.X. and Zhou, X. SVC: A Vision Transformer-based Spatially and Virtually Embedded Cell Model for Deciphering Subcellular Spatial Transcriptomic Heterogeneity. *bioRxiv* (2026). <https://doi.org/10.64898/2026.10.07.757371>
+
+---
+
 Visit our [group website](https://xiangzhou.github.io/) for more statistical tools on analyzing genetics, genomics and transcriptomics data.
