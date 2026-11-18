@@ -75,6 +75,8 @@ The documentation includes:
 - Data preprocessing
 - Model usage examples
 
+A demo on the seqFISH+ test cells, from raw transcripts to predicted RNA localization, is in [demo/demo_seqFISHplus.ipynb](demo/demo_seqFISHplus.ipynb).
+
 ---
 ## 💾 Data availability
 
