@@ -7,6 +7,7 @@ from matplotlib.patches import Circle, Rectangle
 GENE_COLORS = ["#D87867", "#2C6DB2", "#2A9D8F"]
 INK, MUTED, FAINT = "#111111", "#5F6368", "#9AA0A6"
 CELL_FILL, NUC_FILL, OUTLINE, OTHER_TX = "#F1F3F4", "#DADDE0", "#5F6368", "#BCC0C4"
+SEED = 2825
 
 
 def setup():
