@@ -14,7 +14,7 @@ def setup():
         "font.family": "sans-serif",
         "font.sans-serif": ["Arial", "Helvetica", "Liberation Sans", "DejaVu Sans"],
         "font.size": 11, "axes.titlesize": 12, "axes.titleweight": "bold", "axes.labelsize": 11,
-        "axes.edgecolor": MUTED, "axes.labelcolor": INK, "xtick.color": MUTED, "ytick.color": MUTED,
+        "axes.edgecolor": MUTED, "axes.labelcolor": INK,
         "axes.spines.top": False, "axes.spines.right": False, "legend.frameon": False,
         "figure.dpi": 110, "savefig.dpi": 200, "figure.facecolor": "white",
     })
@@ -193,7 +193,7 @@ def observed_vs_predicted(cell, genes, cell_names, gene_names, truth, mu, tx, sa
             _frame_cell(a, cb, cell)
         ax[i, 0].text(-0.1, 0.5, g, transform=ax[i, 0].transAxes, ha="right", va="center",
                       fontsize=13, fontstyle="italic", fontweight="bold")
-    for k, t in enumerate(["Observed counts", r"Predicted NB mean $\hat{\mu}$", "Observed molecules",
-                           "Sampled transcripts"]):
+    for k, t in enumerate(["Observed counts", r"Predicted NB mean $\hat{\mu}$", "Observed transcripts",
+                           "Predicted transcripts"]):
         ax[0, k].set_title(t)
     return fig
