@@ -1,13 +1,10 @@
-"""Figures for demo_seqFISHplus.ipynb. All computation in the notebook uses svc/ and seqfish/ of this repository; this file only
-draws. Image convention: y increases downward and maps are drawn with row 0 at the top, so maps and molecules share
-one orientation."""
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import BoundaryNorm, LinearSegmentedColormap, to_rgb
 from matplotlib.lines import Line2D
 from matplotlib.patches import Circle, Rectangle
 
-GENE_COLORS = ["#D87867", "#2C6DB2", "#2A9D8F"]   # fixed order, colour-vision-deficiency checked
+GENE_COLORS = ["#D87867", "#2C6DB2", "#2A9D8F"]
 INK, MUTED, FAINT = "#111111", "#5F6368", "#9AA0A6"
 CELL_FILL, NUC_FILL, OUTLINE, OTHER_TX = "#F1F3F4", "#DADDE0", "#5F6368", "#BCC0C4"
 
@@ -78,7 +75,6 @@ def _map(ax, m, cmap, vmax, n_pix, discrete=False):
 
 
 def _colorbar(fig, ax, im):
-    """Colorbar placed outside the axes, so the axes keep the same size as their neighbors."""
     cbar = fig.colorbar(im, cax=ax.inset_axes([1.04, 0.0, 0.05, 1.0]))
     cbar.set_label("transcripts per bin", fontsize=9)
     cbar.ax.tick_params(labelsize=9)
